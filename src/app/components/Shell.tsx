@@ -3,6 +3,7 @@ import {
   LayoutDashboard, FolderKanban, CheckSquare, Receipt, MessageSquare, Users,
   Bell, Search, KanbanSquare, Clock, GitPullRequest, UserCircle, ListChecks,
   BarChart3, ShieldCheck, CreditCard, LifeBuoy, Layers, ChevronDown, Sparkles,
+  Menu, X,
 } from "lucide-react";
 import { cn } from "./ui/utils";
 import { useApp, DEFAULT_PAGE } from "../AppContext";
@@ -62,14 +63,33 @@ const ROLE_LABEL: Record<Role, string> = {
 export function Shell({ children }: { children: ReactNode }) {
   const { role, setRole, page, setPage } = useApp();
   const [notifOpen, setNotifOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const user = CURRENT_USER[role];
   const nav = NAV[role];
   const unread = notifications.filter((n) => n.unread).length;
 
+  const navigate = (key: string) => {
+    setPage(key);
+    setSidebarOpen(false);
+  };
+
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
+    <div className="flex h-dvh w-full overflow-hidden bg-background text-foreground">
+      {sidebarOpen && (
+        <button
+          aria-label="Close navigation overlay"
+          className="fixed inset-0 z-40 bg-background/70 backdrop-blur-sm lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-sidebar">
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] shrink-0 flex-col border-r border-border bg-sidebar transition-transform duration-200 lg:static lg:z-auto lg:w-60 lg:max-w-none lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
         <div className="flex items-center gap-2 px-5 h-16 border-b border-border">
           <div className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground">
             <Layers className="size-5" />
@@ -78,6 +98,13 @@ export function Shell({ children }: { children: ReactNode }) {
             <div className="font-display font-bold tracking-tight">DevPilot</div>
             <div className="text-[10px] text-muted-foreground font-mono">AI Technical PM</div>
           </div>
+          <button
+            aria-label="Close navigation"
+            className="ml-auto grid size-9 place-items-center rounded-md border border-border text-muted-foreground lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X className="size-4" />
+          </button>
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
@@ -86,7 +113,7 @@ export function Shell({ children }: { children: ReactNode }) {
             return (
               <button
                 key={item.key}
-                onClick={() => setPage(item.key)}
+                onClick={() => navigate(item.key)}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                   active
@@ -116,22 +143,30 @@ export function Shell({ children }: { children: ReactNode }) {
       {/* Main column */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex h-16 shrink-0 items-center gap-4 border-b border-border px-6">
-          <div className="relative hidden md:flex items-center flex-1 max-w-md">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border px-3 sm:gap-4 sm:px-6">
+          <button
+            aria-label="Open navigation"
+            className="grid size-9 shrink-0 place-items-center rounded-md border border-border text-muted-foreground lg:hidden"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu className="size-4" />
+          </button>
+
+          <div className="relative hidden lg:flex items-center flex-1 max-w-md">
             <Search className="absolute left-3 size-4 text-muted-foreground" />
             <input
               placeholder="Search projects, tasks, people…"
               className="w-full rounded-md border border-border bg-input-background pl-9 pr-3 py-2 text-sm outline-none focus:border-primary/50"
             />
           </div>
-          <div className="flex-1 md:hidden" />
+          <div className="flex-1 lg:hidden" />
 
           {/* Role switcher */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm hover:border-primary/40">
-                <span className="text-muted-foreground text-xs font-mono">VIEW AS</span>
-                <span className="font-medium">{ROLE_LABEL[role]}</span>
+              <button className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-card px-2 py-2 text-sm hover:border-primary/40 sm:px-3">
+                <span className="hidden text-muted-foreground text-xs font-mono sm:inline">VIEW AS</span>
+                <span className="max-w-[7rem] truncate font-medium sm:max-w-none">{ROLE_LABEL[role]}</span>
                 <ChevronDown className="size-4 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
@@ -179,7 +214,7 @@ export function Shell({ children }: { children: ReactNode }) {
             </PopoverContent>
           </Popover>
 
-          <div className="flex items-center gap-2 pl-2">
+          <div className="flex items-center gap-2 pl-0 sm:pl-2">
             <Avatar className="size-9">
               <AvatarImage src={user.avatar} alt={user.name} />
               <AvatarFallback>{user.name.slice(0, 2)}</AvatarFallback>
@@ -191,7 +226,28 @@ export function Shell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <div className="border-b border-border px-3 py-2 lg:hidden">
+          <div className="flex gap-2 overflow-x-auto pb-0.5">
+            {nav.map((item) => {
+              const active = page === item.key;
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => navigate(item.key)}
+                  className={cn(
+                    "flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs",
+                    active ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-muted-foreground"
+                  )}
+                >
+                  {item.icon}
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <main className="min-w-0 flex-1 overflow-y-auto">{children}</main>
       </div>
 
       {/* Global AI assistant (Client + TM) */}
@@ -202,12 +258,12 @@ export function Shell({ children }: { children: ReactNode }) {
 
 export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-4 mb-6">
-      <div>
+    <div className="mb-6 flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-start">
+      <div className="min-w-0">
         <h1 className="font-display tracking-tight">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
       </div>
-      {action}
+      {action && <div className="shrink-0 sm:max-w-[60%]">{action}</div>}
     </div>
   );
 }

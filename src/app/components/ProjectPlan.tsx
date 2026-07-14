@@ -15,7 +15,7 @@ import {
 function Stepper({ status }: { status: Project["status"] }) {
   const idx = lifecycleStages.findIndex((s) => s.key === status);
   return (
-    <div className="flex items-center gap-1 overflow-x-auto">
+    <div className="flex items-center gap-1 overflow-x-auto pb-1">
       {lifecycleStages.map((s, i) => (
         <div key={s.key} className="flex items-center gap-1">
           <div
@@ -58,12 +58,12 @@ export function ProjectPlan({ projectId, editable = false }: { projectId: string
       <Panel className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <h2 className="font-display">{p.name}</h2>
               <StatusPill status={p.status} />
             </div>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{p.description}</p>
-            <div className="mt-2 flex gap-4 text-xs text-muted-foreground font-mono">
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground font-mono">
               <span>{p.domain}</span>
               <span>Complexity: {p.complexity}</span>
             </div>
@@ -76,7 +76,7 @@ export function ProjectPlan({ projectId, editable = false }: { projectId: string
       </Panel>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="flex-wrap h-auto">
+        <TabsList className="h-auto max-w-full flex-wrap justify-start overflow-x-auto">
           {TAB_META.map((t) => (
             <TabsTrigger key={t.key} value={t.key} className="gap-1.5">
               {t.icon} {t.label}
@@ -155,13 +155,13 @@ export function ProjectPlan({ projectId, editable = false }: { projectId: string
                 { n: 4, goal: "Multi-currency + reporting endpoints", pts: 21, weeks: "Wk 8–9" },
                 { n: 5, goal: "Gemini categorization + exports + hardening", pts: 18, weeks: "Wk 10–12" },
               ].map((s) => (
-                <div key={s.n} className="flex items-center gap-4 rounded-md border border-border p-3">
+                <div key={s.n} className="flex flex-col gap-3 rounded-md border border-border p-3 sm:flex-row sm:items-center sm:gap-4">
                   <div className="grid size-10 shrink-0 place-items-center rounded-md bg-primary/10 font-display font-semibold text-primary">S{s.n}</div>
                   <div className="flex-1">
                     <div className="text-sm">{s.goal}</div>
                     <div className="text-xs text-muted-foreground font-mono">{s.weeks}</div>
                   </div>
-                  <Mono className="text-sm text-muted-foreground">{s.pts} pts</Mono>
+                  <Mono className="text-sm text-muted-foreground sm:text-right">{s.pts} pts</Mono>
                 </div>
               ))}
             </div>
@@ -180,7 +180,7 @@ export function ProjectPlan({ projectId, editable = false }: { projectId: string
             <div className="space-y-3">
               {aiRisks.map((r, i) => (
                 <div key={i} className="rounded-md border border-border p-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-sm font-medium">{r.flag}</span>
                     <StatusPill status={r.severity} />
                   </div>
@@ -198,7 +198,7 @@ export function ProjectPlan({ projectId, editable = false }: { projectId: string
               <p className="mt-1 text-xs text-muted-foreground">Estimated range, not a fixed quote. Spent to date: {money(p.spent)}.</p>
               <div className="mt-4">
                 <ProgressBar value={(p.spent / p.budgetHigh) * 100} />
-                <div className="mt-1 flex justify-between text-xs text-muted-foreground font-mono">
+                  <div className="mt-1 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground font-mono">
                   <span>{money(p.spent)} spent</span>
                   <span>{money(p.budgetHigh)} ceiling</span>
                 </div>
@@ -214,7 +214,7 @@ export function ProjectPlan({ projectId, editable = false }: { projectId: string
                 {p.team.slice(0, 4).map((id) => {
                   const m = personById(id)!;
                   return (
-                    <div key={id} className="flex items-center justify-between text-sm">
+                    <div key={id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
                       <span>{m.name}</span>
                       <span className="text-muted-foreground font-mono">{m.role === "tm" ? "Lead" : m.rate ? money(m.rate) + "/hr" : "—"}</span>
                     </div>
@@ -232,7 +232,7 @@ export function ProjectPlan({ projectId, editable = false }: { projectId: string
 function PlanCard({ title, children, editable }: { title: string; children: React.ReactNode; editable?: boolean }) {
   return (
     <Panel className="p-5">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h3>{title}</h3>
         {editable && (
           <button className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:border-primary/40">

@@ -120,7 +120,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
     <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
       <header className="sticky top-0 z-40 border-b border-border/80 bg-background/85 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground font-display text-sm font-bold">D</div>
             <span className="font-display text-sm font-semibold tracking-tight">DevPilot</span>
@@ -132,8 +132,9 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
               </a>
             ))}
           </nav>
-          <Button size="sm" onClick={onEnter}>
-            Launch dashboard
+          <Button size="sm" onClick={onEnter} className="shrink-0">
+            <span className="hidden sm:inline">Launch dashboard</span>
+            <span className="sm:hidden">Launch</span>
             <ArrowRight className="size-3.5" />
           </Button>
         </div>
@@ -146,7 +147,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
           className="pointer-events-none absolute -top-40 left-1/2 h-[520px] w-[900px] -translate-x-1/2 rounded-full opacity-[0.15] blur-3xl"
           style={{ background: "radial-gradient(closest-side, var(--chart-1), var(--chart-2) 60%, transparent 75%)" }}
         />
-        <div className="relative mx-auto max-w-6xl px-6 pt-16 pb-20 lg:pt-24 lg:pb-28">
+        <div className="relative mx-auto max-w-6xl px-4 pt-14 pb-16 sm:px-6 sm:pt-16 sm:pb-20 lg:pt-24 lg:pb-28">
           <motion.div
             initial={prefersReducedMotion ? undefined : "hidden"}
             animate={prefersReducedMotion ? undefined : "show"}
@@ -158,7 +159,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
                 Your AI Technical Project Manager
               </Badge>
             </motion.div>
-            <motion.h1 variants={fadeUp(0.05)} className="mt-5 font-display text-4xl font-semibold leading-[1.1] tracking-tight lg:text-5xl">
+            <motion.h1 variants={fadeUp(0.05)} className="mt-5 font-display text-3xl font-semibold leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl">
               Describe the idea.
               <br />
               DevPilot runs the project.
@@ -189,10 +190,10 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
 
       {/* Problem */}
       <section className="border-t border-border/80 py-20 lg:py-28">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal>
             <SectionEyebrow>The problem</SectionEyebrow>
-            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight lg:text-4xl">
+            <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
               Non-technical founders can't evaluate technical work.
             </h2>
             <p className="mt-4 max-w-2xl text-muted-foreground">
@@ -226,10 +227,10 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
 
       {/* How it works */}
       <section id="how-it-works" className="border-t border-border/80 py-20 lg:py-28">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal>
             <SectionEyebrow>How it works</SectionEyebrow>
-            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight lg:text-4xl">
+            <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
               One idea, eight steps, a delivered project.
             </h2>
           </Reveal>
@@ -253,9 +254,9 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
 
       {/* Guardrail principle */}
       <section className="border-t border-border/80 py-16">
-        <div className="mx-auto max-w-3xl px-6">
-          <Reveal className="rounded-xl border border-primary/25 bg-primary/[0.06] p-8 text-center">
-            <p className="font-display text-2xl font-semibold tracking-tight lg:text-3xl">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <Reveal className="rounded-xl border border-primary/25 bg-primary/[0.06] p-5 text-center sm:p-8">
+            <p className="font-display text-xl font-semibold tracking-tight sm:text-2xl lg:text-3xl">
               AI proposes. Humans approve.
             </p>
             <p className="mt-3 text-sm text-muted-foreground">
@@ -268,16 +269,17 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
 
       {/* Comparison */}
       <section id="comparison" className="border-t border-border/80 py-20 lg:py-28">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <Reveal>
             <SectionEyebrow>Why DevPilot</SectionEyebrow>
-            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight lg:text-4xl">
+            <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
               A board organizes work. DevPilot does it.
             </h2>
           </Reveal>
 
           <Reveal delay={0.05} className="mt-10 overflow-hidden rounded-xl border border-border">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[620px] text-sm">
               <thead>
                 <tr className="border-b border-border bg-card/60 text-left">
                   <th className="px-5 py-3.5 font-medium text-muted-foreground">Capability</th>
@@ -299,21 +301,22 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
                 ))}
               </tbody>
             </table>
+            </div>
           </Reveal>
         </div>
       </section>
 
       {/* AI Features grid */}
       <section id="features" className="border-t border-border/80 py-20 lg:py-28">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal>
             <SectionEyebrow>Under the hood</SectionEyebrow>
-            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight lg:text-4xl">
+            <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
               Fifteen AI capabilities, one continuous manager.
             </h2>
           </Reveal>
 
-          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="mt-10 grid grid-cols-1 gap-3 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
             {AI_FEATURES.map((feature, i) => {
               const Icon = feature.icon;
               return (
@@ -331,10 +334,10 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
 
       {/* Pricing */}
       <section id="pricing" className="border-t border-border/80 py-20 lg:py-28">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal className="text-center">
             <SectionEyebrow>Pricing</SectionEyebrow>
-            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight lg:text-4xl">
+            <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
               Priced for how many projects you run.
             </h2>
           </Reveal>
@@ -380,9 +383,9 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
 
       {/* Final CTA + footer */}
       <section className="border-t border-border/80 py-20">
-        <div className="mx-auto max-w-3xl px-6 text-center">
+        <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <Reveal>
-            <h2 className="font-display text-3xl font-semibold tracking-tight lg:text-4xl">
+            <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
               Your next project deserves a technical manager.
             </h2>
             <p className="mt-3 text-muted-foreground">Even if it's an AI one, backed by a human who signs off on it.</p>
@@ -397,7 +400,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
       </section>
 
       <footer className="border-t border-border/80 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 text-xs text-muted-foreground sm:flex-row">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 text-center text-xs text-muted-foreground sm:flex-row sm:px-6 sm:text-left">
           <span>© {new Date().getFullYear()} DevPilot. All estimates are AI-generated and reviewed by a human before they're final.</span>
           <span className="font-mono">AI proposes · humans approve</span>
         </div>

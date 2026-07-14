@@ -11,13 +11,13 @@ export function Mono({ children, className }: { children: ReactNode; className?:
 // Card surface used everywhere.
 export function Panel({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("rounded-lg border border-border bg-card", className)}>{children}</div>
+    <div className={cn("min-w-0 rounded-lg border border-border bg-card", className)}>{children}</div>
   );
 }
 
 export function SectionTitle({ children, hint }: { children: ReactNode; hint?: string }) {
   return (
-    <div className="flex items-baseline justify-between mb-3">
+    <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
       <h3 className="text-foreground">{children}</h3>
       {hint && <span className="text-xs text-muted-foreground font-mono">{hint}</span>}
     </div>
@@ -60,7 +60,7 @@ export function StatCard({
         <span className="text-xs uppercase tracking-wide text-muted-foreground font-mono">{label}</span>
         {icon && <span className={cn("opacity-80", accentColor)}>{icon}</span>}
       </div>
-      <div className="mt-2 text-3xl font-display font-semibold tracking-tight">{value}</div>
+      <div className="mt-2 break-words font-display text-2xl font-semibold tracking-tight sm:text-3xl">{value}</div>
       {sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}
     </Panel>
   );

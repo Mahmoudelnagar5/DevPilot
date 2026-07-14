@@ -42,7 +42,7 @@ function KanbanBoard() {
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, status } : t)));
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="Task Board" subtitle={`${p.name} · Sprint 3 — drag cards to update status`} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {COLUMNS.map((col) => {
@@ -114,7 +114,7 @@ function TimeTracking() {
   const fmt = (s: number) => `${String(Math.floor(s / 3600)).padStart(2, "0")}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="Time Tracking" subtitle="Log time per task — manual entry or timer" />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <StatCard label="Logged This Week" value={`${totalLogged}h`} icon={<Clock className="size-4" />} />
@@ -123,13 +123,13 @@ function TimeTracking() {
       </div>
       <Panel className="divide-y divide-border">
         {myTasks.map((t) => (
-          <div key={t.id} className="flex items-center gap-4 p-4">
+          <div key={t.id} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
             <div className="flex-1">
               <div className="flex items-center gap-2"><Mono className="text-xs text-primary">{t.key}</Mono><StatusPill status={t.status} /></div>
               <div className="mt-1 text-sm">{t.title}</div>
               <div className="mt-2 max-w-xs"><ProgressBar value={(t.hoursLogged / t.estimate) * 100} /></div>
             </div>
-            <Mono className="text-sm text-muted-foreground">{t.hoursLogged}/{t.estimate}h</Mono>
+            <Mono className="text-sm text-muted-foreground sm:text-right">{t.hoursLogged}/{t.estimate}h</Mono>
             <Button
               variant={running === t.id ? "destructive" : "outline"}
               size="sm"
@@ -150,7 +150,7 @@ function TimeTracking() {
 function CodeReviews() {
   const sevIcon = { security: <ShieldAlert className="size-4 text-destructive" />, warning: <AlertTriangle className="size-4 text-warning" />, info: <Info className="size-4 text-chart-2" /> };
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="AI Code Reviews" subtitle="Advisory feedback on your pull requests — not blocking by default" />
       <Panel className="mb-4 p-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -176,7 +176,7 @@ function CodeReviews() {
       <div className="space-y-3">
         {codeReview.comments.map((c, i) => (
           <Panel key={i} className="p-4">
-            <div className="flex items-start gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
               {sevIcon[c.severity]}
               <div className="flex-1">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
@@ -201,11 +201,11 @@ function DailyLog() {
   ]);
   const [draft, setDraft] = useState("");
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="max-w-3xl p-4 sm:p-6">
       <PageHeader title="Daily Log" subtitle="Short structured update — AI can summarize your week for standup" />
       <Panel className="mb-4 p-4">
         <Textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={3} placeholder="What did you work on today? Any blockers?" />
-        <div className="mt-3 flex justify-end gap-2">
+        <div className="mt-3 flex flex-col justify-end gap-2 sm:flex-row">
           <Button variant="outline" onClick={() => draft && toast.success("AI summary drafted from your update")}>Summarize with AI</Button>
           <Button onClick={() => { if (draft) { setEntries((e) => [{ day: "Today", text: draft }, ...e]); setDraft(""); toast.success("Log posted"); } }}>
             <Plus className="size-4" /> Post update
@@ -227,10 +227,10 @@ function DailyLog() {
 function DevProfile() {
   const me = CURRENT_USER.developer;
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="max-w-3xl p-4 sm:p-6">
       <PageHeader title="My Profile" subtitle="Your public profile drives AI developer matching" />
       <Panel className="p-6">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <Avatar className="size-16"><AvatarImage src={me.avatar} /><AvatarFallback>{me.name.slice(0, 2)}</AvatarFallback></Avatar>
           <div>
             <div className="font-display text-xl font-semibold">{me.name}</div>

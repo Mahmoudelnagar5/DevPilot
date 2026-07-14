@@ -34,7 +34,7 @@ function TMOverview() {
   const atRisk = projects.filter((p) => p.riskScore > 45).length;
   const pendingApprovals = projects.filter((p) => p.status === "tm-review").length;
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="Delivery Overview" subtitle="Lina Haddad — projects awaiting your review appear here" />
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Owned Projects" value={projects.length} icon={<FolderKanban className="size-4" />} />
@@ -98,12 +98,12 @@ function PlanReview() {
   const alreadyReleased = p.status === "client-approval" || p.status === "in-progress" || p.status === "delivered";
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader
         title="AI Plan Review"
         subtitle="Review and edit the AI's draft before the client sees it. You have final say."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Button variant="outline" onClick={() => toast("Sent back to AI with your notes")}>Regenerate section</Button>
             <Button
               disabled={!isPending}
@@ -150,14 +150,14 @@ function Assignments() {
     .sort((a, b) => b.score - a.score);
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="Developer Assignment" subtitle="AI ranks candidates by skill match & availability — you confirm or override" />
       <Panel className="mb-4 p-4">
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
           <Mono className="text-primary">{task.key}</Mono>
           <span>{task.title}</span>
         </div>
-        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           Required skills:
           {required.map((r) => <span key={r} className="rounded bg-muted px-2 py-0.5 font-mono">{r}</span>)}
           <AiTag label="AI ranked" />
@@ -166,7 +166,7 @@ function Assignments() {
       <div className="space-y-3">
         {ranked.map(({ d, matches, score }, i) => (
           <Panel key={d.id} className={cn("p-4", i === 0 && "border-primary/40")}>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <div className="w-8 text-center">
                 {i === 0 ? <Star className="mx-auto size-5 text-primary" /> : <Mono className="text-muted-foreground">#{i + 1}</Mono>}
               </div>
@@ -179,11 +179,11 @@ function Assignments() {
                   ))}
                 </div>
               </div>
-              <div className="text-right text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground sm:text-right">
                 <div><Mono>{matches}</Mono> skill match</div>
                 <div><Mono>{d.availability}%</Mono> free</div>
               </div>
-              <div className="w-28 text-right">
+              <div className="w-full sm:w-28 sm:text-right">
                 <div className="text-xs text-muted-foreground">match</div>
                 <div className="font-display text-lg font-semibold text-primary">{Math.round(score)}</div>
               </div>
@@ -205,14 +205,14 @@ function Assignments() {
 function PRReviews() {
   const [decision, setDecision] = useState<"accepted" | "overridden" | null>(null);
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="PR Review" subtitle="Your review sits alongside the AI's — accept or override with reasoning" />
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel className="p-5">
-          <div className="flex items-center gap-2 mb-3"><GitPullRequest className="size-5 text-primary" /><h3>{codeReview.pr}</h3></div>
+          <div className="mb-3 flex flex-wrap items-center gap-2"><GitPullRequest className="size-5 text-primary" /><h3>{codeReview.pr}</h3></div>
           <p className="text-sm text-muted-foreground">Author: Youssef Amrani · +214 −38 · 6 files</p>
           <SectionTitle hint="advisory">AI Review</SectionTitle>
-          <div className="mb-3 flex gap-6">
+          <div className="mb-3 flex flex-wrap gap-6">
             <div><span className="text-muted-foreground text-xs font-mono">QUALITY </span><Mono className="text-success">{codeReview.qualityScore}</Mono></div>
             <div><span className="text-muted-foreground text-xs font-mono">SECURITY </span><Mono className="text-destructive">{codeReview.securityFlags} flag</Mono></div>
           </div>
@@ -236,7 +236,7 @@ function PRReviews() {
             AI recommends <strong>request changes</strong> — 1 unresolved security flag (access_token logged).
           </div>
           <Textarea rows={4} placeholder="Reasoning (logged for auditability — every override is recorded)…" className="mb-3" />
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Button variant="outline" onClick={() => { setDecision("overridden"); toast("Override recorded — merged with reasoning"); }}>
               Override & approve
             </Button>
@@ -258,19 +258,19 @@ function PRReviews() {
 function Reports() {
   const p = projectById("p-ledgerloop")!;
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader
         title="Status Reports"
         subtitle="AI-drafted, exportable reports for clients & stakeholders"
         action={<Button onClick={() => toast.success("Report exported to PDF")}><FileDown className="size-4" /> Export PDF</Button>}
       />
-      <Panel className="p-6 max-w-3xl">
-        <div className="flex items-center justify-between">
+      <Panel className="max-w-3xl p-4 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display">{p.name} — Weekly Status</h2>
           <AiTag label="AI drafted" />
         </div>
         <p className="mt-1 text-xs text-muted-foreground font-mono">Week of Jul 6 – Jul 12, 2026</p>
-        <div className="mt-4 flex items-center gap-6">
+        <div className="mt-4 flex flex-col gap-6 sm:flex-row sm:items-center">
           <ScoreRing score={p.health} label="health" />
           <div className="space-y-1 text-sm">
             <div>Progress: <Mono>{p.progress}%</Mono> ({p.milestones.filter((m) => m.status === "approved" || m.status === "paid").length}/{p.milestones.length} milestones)</div>

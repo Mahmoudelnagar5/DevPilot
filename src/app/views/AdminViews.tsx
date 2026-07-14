@@ -58,7 +58,7 @@ function ChartTooltip({ active, payload, label }: any) {
 
 function Analytics() {
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="Platform Analytics" subtitle="DevPilot Ops — live platform health" />
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Active Projects" value={platformStats.activeProjects} icon={<Sparkles className="size-4" />} />
@@ -138,7 +138,7 @@ function UsersAdmin() {
     toast.success(`User ${status}`);
   };
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="User Management" subtitle={`${users.length} users — verify, suspend, edit roles`} />
       <div className="relative mb-4 max-w-sm">
         <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
@@ -186,7 +186,7 @@ function UsersAdmin() {
 function ProjectsAdmin() {
   const { projects } = useApp();
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="Project Oversight" subtitle="All projects across the platform" />
       <Panel className="overflow-hidden">
         <Table>
@@ -216,7 +216,7 @@ function ProjectsAdmin() {
 
 function PlansAdmin() {
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="Subscription Plans" subtitle="Tiers, limits, and active subscribers" />
       <div className="grid gap-4 md:grid-cols-3">
         {plans.map((p) => (
@@ -245,7 +245,7 @@ function PlansAdmin() {
 
 function Support() {
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="Support Queue" subtitle="Tickets across the platform" />
       <Panel className="overflow-hidden">
         <Table>
@@ -276,13 +276,13 @@ function Support() {
 function PlatformSettings() {
   const [flags, setFlags] = useState({ aiCodeReview: true, autoRisk: true, meetingSummaries: false, i18n: true });
   return (
-    <div className="p-6 max-w-2xl">
+    <div className="max-w-2xl p-4 sm:p-6">
       <PageHeader title="Platform Settings" subtitle="Feature flags, AI provider config, rate limits" />
       <Panel className="p-5 mb-4">
         <SectionTitle>Feature Flags</SectionTitle>
         <div className="space-y-3">
           {Object.entries({ aiCodeReview: "AI Code Review", autoRisk: "Automatic Risk Recalculation", meetingSummaries: "Meeting Summaries (beta)", i18n: "Internationalization" }).map(([k, label]) => (
-            <div key={k} className="flex items-center justify-between">
+            <div key={k} className="flex items-center justify-between gap-4">
               <span className="text-sm">{label}</span>
               <button
                 onClick={() => setFlags((f) => ({ ...f, [k]: !f[k as keyof typeof f] }))}
@@ -297,8 +297,8 @@ function PlatformSettings() {
       <Panel className="p-5">
         <SectionTitle>AI Provider</SectionTitle>
         <div className="space-y-3 text-sm">
-          <div className="flex items-center justify-between"><span className="text-muted-foreground">Provider</span><Mono>Google Gemini</Mono></div>
-          <div className="flex items-center justify-between"><span className="text-muted-foreground">Model</span><Mono>gemini-2.5-pro</Mono></div>
+          <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-muted-foreground">Provider</span><Mono>Google Gemini</Mono></div>
+          <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-muted-foreground">Model</span><Mono>gemini-2.5-pro</Mono></div>
           <div>
             <label className="mb-1.5 block text-muted-foreground">API Key</label>
             <Input type="password" defaultValue="YOUR_API_KEY_HERE" className="font-mono" />

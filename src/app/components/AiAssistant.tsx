@@ -51,7 +51,7 @@ export function AiAssistant() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-105"
+          className="fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-105 sm:bottom-6 sm:right-6"
         >
           <Sparkles className="size-5" />
           <span className="font-medium text-sm">Ask AI</span>
@@ -59,7 +59,7 @@ export function AiAssistant() {
       )}
 
       {open && (
-        <div className="fixed bottom-6 right-6 z-40 flex h-[520px] w-96 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+        <div className="fixed inset-x-3 bottom-3 z-40 flex h-[min(520px,calc(100dvh-1.5rem))] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-96">
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <div className="flex items-center gap-2">
               <div className="grid size-7 place-items-center rounded-md bg-primary/15 text-primary">

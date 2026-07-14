@@ -45,7 +45,7 @@ function ClientDashboard() {
   const inExecution = projects.filter((p) => p.status === "in-progress").length;
   const awaiting = projects.filter((p) => p.status === "tm-review" || p.status === "client-approval").length;
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader
         title="Welcome back, Nadia"
         subtitle="Your portfolio at a glance — AI-monitored, human-approved."
@@ -84,7 +84,7 @@ function ProjectCard({ project: p, onOpen }: { project: Project; onOpen: () => v
             <StatusPill status={p.status} />
           </div>
         </div>
-        <div className="flex items-center gap-4 p-4">
+        <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
           <ScoreRing score={p.health} label="health" />
           <div className="flex-1 space-y-3">
             <div>
@@ -187,14 +187,14 @@ function ClientProject() {
   const awaitingClient = p?.status === "client-approval";
   const inReviewByTM = p?.status === "tm-review";
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader
         title="Project Plan"
         subtitle="AI-generated plan — review before approving. Every figure is an estimate."
         action={
           p && (
             awaitingClient ? (
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button variant="outline" onClick={() => { updateProjectStatus(p.id, "tm-review"); toast("Sent back to your Technical Manager with comments."); }}>
                   <X className="size-4" /> Request changes
                 </Button>
@@ -221,7 +221,7 @@ function ClientMilestones() {
   const [decided, setDecided] = useState<Record<string, "approved" | "rejected">>({});
   if (!p) return <div className="p-6 text-muted-foreground">Select a project first.</div>;
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="Milestones & Approvals" subtitle={`${p.name} — approve deliverables to release payment.`} />
       <div className="space-y-4">
         {p.milestones.map((m) => {
@@ -231,7 +231,7 @@ function ClientMilestones() {
             <Panel key={m.id} className="p-5">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex-1 min-w-[240px]">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <h3>{m.name}</h3>
                     <StatusPill status={decision ?? m.status} />
                   </div>
@@ -245,7 +245,7 @@ function ClientMilestones() {
                   </div>
                 </div>
                 {canAct && !decision && (
-                  <div className="flex gap-2">
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                     <Button variant="outline" onClick={() => { setDecided((d) => ({ ...d, [m.id]: "rejected" })); toast("Milestone sent back with comments."); }}>
                       <X className="size-4" /> Request changes
                     </Button>
@@ -270,7 +270,7 @@ function ClientInvoices() {
   const total = p.invoices.reduce((s, i) => s + i.amount, 0);
   const paid = p.invoices.filter((i) => i.status === "paid").reduce((s, i) => s + i.amount, 0);
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="Invoices & Payments" subtitle={p.name} />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <StatCard label="Total Invoiced" value={money(total)} icon={<Wallet className="size-4" />} />
@@ -323,9 +323,9 @@ export function MessagesView() {
     setText("");
   };
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="Messages" subtitle="LedgerLoop — project channel" />
-      <Panel className="flex h-[calc(100vh-13rem)] flex-col">
+      <Panel className="flex h-[calc(100dvh-14.5rem)] min-h-[26rem] flex-col sm:h-[calc(100dvh-13rem)]">
         <div className="flex-1 space-y-4 overflow-y-auto p-5">
           {list.map((m) => {
             const person = personById(m.from)!;
@@ -333,7 +333,7 @@ export function MessagesView() {
             return (
               <div key={m.id} className={`flex gap-3 ${mine ? "flex-row-reverse" : ""}`}>
                 <Avatar className="size-8"><AvatarImage src={person.avatar} /><AvatarFallback>{person.name.slice(0, 2)}</AvatarFallback></Avatar>
-                <div className={`max-w-[70%] ${mine ? "text-right" : ""}`}>
+                <div className={`max-w-[82%] sm:max-w-[70%] ${mine ? "text-right" : ""}`}>
                   <div className="mb-1 text-xs text-muted-foreground"><span className="text-foreground">{person.name.split(" ")[0]}</span> · {m.time}</div>
                   <div className={`rounded-lg px-3 py-2 text-sm ${mine ? "bg-primary text-primary-foreground" : "bg-muted"}`}>{m.text}</div>
                 </div>
@@ -355,7 +355,7 @@ export function TeamView() {
   const p = getProject(projectId);
   if (!p) return <div className="p-6 text-muted-foreground">Select a project first.</div>;
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <PageHeader title="Project Team" subtitle={`${p.name} — assigned by your Technical Manager`} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {p.team.map((id) => {
