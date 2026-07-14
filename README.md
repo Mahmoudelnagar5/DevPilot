@@ -1,7 +1,7 @@
 
   # DevPilot
 
-  This is a code bundle for DevPilot. The original project is available at https://www.figma.com/design/OCpejzGQBSJFMC4lXaHscH/Implement-Feature.
+  This is a code bundle for DevPilot. 
 
   ## Running the code
 
