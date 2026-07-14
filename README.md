@@ -1,7 +1,7 @@
 
-  # Implement Feature
+  # DevPilot
 
-  This is a code bundle for Implement Feature. The original project is available at https://www.figma.com/design/OCpejzGQBSJFMC4lXaHscH/Implement-Feature.
+  This is a code bundle for DevPilot. The original project is available at https://www.figma.com/design/OCpejzGQBSJFMC4lXaHscH/Implement-Feature.
 
   ## Running the code
 
