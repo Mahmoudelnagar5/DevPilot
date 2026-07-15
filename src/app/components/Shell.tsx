@@ -3,7 +3,7 @@ import {
   LayoutDashboard, FolderKanban, CheckSquare, Receipt, MessageSquare, Users,
   Bell, Search, KanbanSquare, Clock, GitPullRequest, UserCircle, ListChecks,
   BarChart3, ShieldCheck, CreditCard, LifeBuoy, Layers, ChevronDown, Sparkles,
-  Menu, X,
+  Menu, X, ScrollText, Presentation,
 } from "lucide-react";
 import { cn } from "./ui/utils";
 import { useApp, DEFAULT_PAGE } from "../AppContext";
@@ -28,12 +28,14 @@ const NAV: Record<Role, NavItem[]> = {
     { key: "invoices", label: "Invoices", icon: <Receipt className="size-4" /> },
     { key: "messages", label: "Messages", icon: <MessageSquare className="size-4" /> },
     { key: "team", label: "Team", icon: <Users className="size-4" /> },
+    { key: "trust", label: "Trust Layer", icon: <ScrollText className="size-4" /> },
   ],
   developer: [
     { key: "board", label: "Task Board", icon: <KanbanSquare className="size-4" /> },
     { key: "time", label: "Time Tracking", icon: <Clock className="size-4" /> },
     { key: "reviews", label: "Code Reviews", icon: <GitPullRequest className="size-4" /> },
     { key: "log", label: "Daily Log", icon: <ListChecks className="size-4" /> },
+    { key: "standup", label: "Standup Coach", icon: <Presentation className="size-4" /> },
     { key: "profile", label: "My Profile", icon: <UserCircle className="size-4" /> },
   ],
   tm: [
@@ -42,6 +44,7 @@ const NAV: Record<Role, NavItem[]> = {
     { key: "assign", label: "Assignments", icon: <Users className="size-4" /> },
     { key: "prs", label: "PR Reviews", icon: <GitPullRequest className="size-4" /> },
     { key: "reports", label: "Reports", icon: <BarChart3 className="size-4" /> },
+    { key: "trust", label: "Trust Layer", icon: <ScrollText className="size-4" /> },
   ],
   admin: [
     { key: "analytics", label: "Analytics", icon: <BarChart3 className="size-4" /> },

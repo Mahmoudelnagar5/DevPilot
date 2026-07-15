@@ -8,6 +8,7 @@ import {
   Panel, StatCard, ScoreRing, ProgressBar, StatusPill, Mono, money, AiTag, SectionTitle,
 } from "../components/shared";
 import { ProjectPlan } from "../components/ProjectPlan";
+import { TrustLayer } from "../components/TrustLayer";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
@@ -33,6 +34,7 @@ export function ClientViews() {
     case "invoices": return <ClientInvoices />;
     case "messages": return <MessagesView />;
     case "team": return <TeamView />;
+    case "trust": return <TrustLayer />;
     default: return <ClientDashboard />;
   }
 }
@@ -216,7 +218,7 @@ function ClientProject() {
 }
 
 function ClientMilestones() {
-  const { projectId, getProject } = useApp();
+  const { projectId, getProject, addLedgerEntry } = useApp();
   const p = getProject(projectId);
   const [decided, setDecided] = useState<Record<string, "approved" | "rejected">>({});
   if (!p) return <div className="p-6 text-muted-foreground">Select a project first.</div>;
@@ -246,10 +248,10 @@ function ClientMilestones() {
                 </div>
                 {canAct && !decision && (
                     <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-                    <Button variant="outline" onClick={() => { setDecided((d) => ({ ...d, [m.id]: "rejected" })); toast("Milestone sent back with comments."); }}>
+                    <Button variant="outline" onClick={() => { setDecided((d) => ({ ...d, [m.id]: "rejected" })); addLedgerEntry({ projectId, category: "milestone", title: `${m.name} changes requested`, detail: "Client declined the current deliverable and returned it for revision.", status: "rejected" }); toast("Milestone sent back with comments."); }}>
                       <X className="size-4" /> Request changes
                     </Button>
-                    <Button onClick={() => { setDecided((d) => ({ ...d, [m.id]: "approved" })); toast.success(`Approved — ${money(m.amount)} released.`); }}>
+                    <Button onClick={() => { setDecided((d) => ({ ...d, [m.id]: "approved" })); addLedgerEntry({ projectId, category: "milestone", title: `${m.name} approved`, detail: `${money(m.amount)} payment release authorized after deliverable review.`, status: "approved" }); toast.success(`Approved — ${money(m.amount)} released.`); }}>
                       <Check className="size-4" /> Approve & pay
                     </Button>
                   </div>

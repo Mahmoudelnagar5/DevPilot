@@ -9,7 +9,7 @@ import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import {
   Clock, Play, Square, GitPullRequest, ShieldAlert, Info, AlertTriangle,
-  Github, Linkedin, Link2, CheckCircle2, Plus,
+  Github, Linkedin, Link2, CheckCircle2, Plus, Sparkles, Copy, Send, Pencil, RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "../components/ui/utils";
@@ -21,6 +21,7 @@ export function DeveloperViews() {
     case "time": return <TimeTracking />;
     case "reviews": return <CodeReviews />;
     case "log": return <DailyLog />;
+    case "standup": return <StandupCoach />;
     case "profile": return <DevProfile />;
     default: return <KanbanBoard />;
   }
@@ -219,6 +220,48 @@ function DailyLog() {
             <p className="mt-1.5 text-sm">{e.text}</p>
           </Panel>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function StandupCoach() {
+  const p = projectById("p-ledgerloop")!;
+  const me = CURRENT_USER.developer.id;
+  const completed = p.tasks.filter((task) => task.assignee === me && (task.status === "done" || task.hoursLogged > 0));
+  const [editing, setEditing] = useState(false);
+  const [points, setPoints] = useState([
+    "Yesterday: I implemented the Plaid pending-to-posted transition path and added idempotency coverage.",
+    "Today: I am closing the race condition from AI review, then starting the multi-currency FX service.",
+    "Blocker: I need confirmation on whether pending transactions should affect available cash in reports.",
+  ]);
+
+  const copy = () => {
+    navigator.clipboard?.writeText(points.join("\n"));
+    toast.success("Standup points copied.");
+  };
+
+  return (
+    <div className="p-4 sm:p-6">
+      <PageHeader
+        title="AI Standup Coach"
+        subtitle="Tomorrow's standup · prepared from your tasks, time, PRs, and daily log"
+        action={<div className="flex gap-2"><Button variant="outline" onClick={() => toast.success("Standup regenerated from the latest activity.")}><RefreshCw className="size-4" /> Refresh</Button><Button onClick={copy}><Copy className="size-4" /> Copy update</Button></div>}
+      />
+      <div className="grid gap-4 lg:grid-cols-[.8fr_1.2fr]">
+        <div className="space-y-4">
+          <Panel className="p-5">
+            <div className="flex items-center justify-between gap-2"><h3>Activity summary</h3><span className="flex items-center gap-1 text-xs text-primary"><Sparkles className="size-3.5" /> AI prepared</span></div>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">You logged <Mono className="text-foreground">11 hours</Mono> across {completed.length} active or completed items. Your main progress was on Plaid reconciliation, with one security issue and one concurrency issue surfaced during review.</p>
+            <div className="mt-4 space-y-2">{completed.map((task) => <div key={task.id} className="rounded-md border border-border bg-muted/20 p-3"><div className="flex items-center justify-between gap-2"><Mono className="text-xs text-primary">{task.key}</Mono><StatusPill status={task.status} /></div><div className="mt-1 text-sm">{task.title}</div><div className="mt-1 text-xs text-muted-foreground">{task.hoursLogged}h logged · {task.points} points</div></div>)}</div>
+          </Panel>
+          <Panel className="border-warning/30 bg-warning/5 p-5"><div className="flex items-center gap-2 text-warning"><AlertTriangle className="size-4" /><h3>Coach note</h3></div><p className="mt-2 text-sm text-muted-foreground">Lead with the user impact, not implementation detail. Ask Lina for a decision on pending cash treatment so the blocker has a clear owner.</p></Panel>
+        </div>
+        <Panel className="p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3"><div><h3>Your 3 talking points</h3><p className="text-xs text-muted-foreground">AI drafted. Edit before sharing; nothing is posted automatically.</p></div><Button size="sm" variant="ghost" onClick={() => setEditing((value) => !value)}><Pencil className="size-4" /> {editing ? "Done editing" : "Edit"}</Button></div>
+          <div className="mt-5 space-y-3">{points.map((point, index) => <div key={index} className="flex gap-3 rounded-lg border border-border bg-muted/20 p-4"><div className="grid size-7 shrink-0 place-items-center rounded-md bg-primary/15 font-mono text-xs text-primary">{index + 1}</div>{editing ? <Textarea className="min-h-20" value={point} onChange={(event) => setPoints((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} /> : <p className="text-sm leading-relaxed">{point}</p>}</div>)}</div>
+          <div className="mt-5 flex flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between"><div className="text-xs text-muted-foreground"><CheckCircle2 className="mr-1 inline size-3.5 text-success" /> Private draft · only you can share it</div><Button onClick={() => toast.success("Standup update shared with the project channel.")}><Send className="size-4" /> Approve & share</Button></div>
+        </Panel>
       </div>
     </div>
   );

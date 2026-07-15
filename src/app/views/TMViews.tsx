@@ -4,6 +4,7 @@ import { projectById, personById, people, codeReview } from "../data/mock";
 import { PageHeader } from "../components/Shell";
 import { Panel, StatCard, ScoreRing, ProgressBar, StatusPill, Mono, money, AiTag, SectionTitle } from "../components/shared";
 import { ProjectPlan } from "../components/ProjectPlan";
+import { TrustLayer } from "../components/TrustLayer";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
@@ -25,6 +26,7 @@ export function TMViews() {
     case "assign": return <Assignments />;
     case "prs": return <PRReviews />;
     case "reports": return <Reports />;
+    case "trust": return <TrustLayer />;
     default: return <TMOverview />;
   }
 }
@@ -136,6 +138,7 @@ function PlanReview() {
 }
 
 function Assignments() {
+  const { addLedgerEntry } = useApp();
   // Rank developers for the currently-open backlog task by simple skill match.
   const task = projectById("p-ledgerloop")!.tasks.find((t) => t.status === "todo")!;
   const required = ["Python", "Gemini API"];
@@ -190,7 +193,7 @@ function Assignments() {
               <Button
                 variant={assigned === d.id ? "default" : "outline"}
                 size="sm"
-                onClick={() => { setAssigned(d.id); toast.success(`${d.name} assigned to ${task.key}`); }}
+                onClick={() => { setAssigned(d.id); addLedgerEntry({ projectId: "p-ledgerloop", category: "approval", title: `${d.name} assigned to ${task.key}`, detail: `Technical Manager confirmed the developer assignment after reviewing AI rank ${i + 1} and match score ${Math.round(score)}.`, status: "approved" }); toast.success(`${d.name} assigned to ${task.key}`); }}
               >
                 {assigned === d.id ? <><Check className="size-4" /> Assigned</> : "Assign"}
               </Button>
