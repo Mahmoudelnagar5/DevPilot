@@ -1,9 +1,9 @@
 import { type ReactNode } from "react";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 import {
-  ArrowRight, Search, FileText, ListChecks, KanbanSquare, Boxes, GitBranch,
+  ArrowRight, ArrowDown, Search, FileText, ListChecks, KanbanSquare, Boxes, GitBranch,
   Users, ShieldAlert, CalendarClock, DollarSign, MessageSquare, BookOpen,
-  GitPullRequest, BarChart3, Bot, Check, X, Sparkles,
+  GitPullRequest, BarChart3, Bot, Check, X, Sparkles, FileClock,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -15,12 +15,13 @@ const NAV_LINKS = [
   { href: "#comparison", label: "Why DevPilot" },
   { href: "#features", label: "AI features" },
   { href: "#pricing", label: "Pricing" },
+  { href: "#human-oversight", label: "Human oversight" },
 ];
 
 const LIFECYCLE_STEPS = [
   { title: "Describe the idea", detail: "The client writes it in plain language, or uploads a spec / Figma link." },
   { title: "AI analyzes it", detail: "Requirements, user stories, architecture, ERD, cost range, timeline, milestones, sprint plan and a risk report — drafted automatically." },
-  { title: "A Technical Manager reviews it", detail: "A human lead edits the plan and assigns developers — the AI ranks candidates, the manager confirms." },
+  { title: "Human oversight reviews it", detail: "A human lead edits the plan and assigns developers — the AI ranks candidates, the manager confirms." },
   { title: "The client approves", detail: "Or sends it back with feedback; the AI redrafts around it." },
   { title: "Developers build in sprints", detail: "Clear Kanban tickets, time tracking, deliverables tied to milestones." },
   { title: "AI keeps watch", detail: "Every pull request gets reviewed, the health score updates, delay risk is flagged early." },
@@ -40,45 +41,158 @@ const COMPARISON_ROWS = [
 ];
 
 const AI_FEATURES = [
-  { icon: Search, label: "Project Analyzer" },
-  { icon: FileText, label: "Requirement Generator" },
-  { icon: ListChecks, label: "User Story Generator" },
-  { icon: KanbanSquare, label: "Sprint Planner" },
-  { icon: Boxes, label: "Architecture Generator" },
-  { icon: GitBranch, label: "ER Diagram Generator" },
-  { icon: Users, label: "Developer Matching" },
-  { icon: ShieldAlert, label: "Risk Prediction" },
-  { icon: CalendarClock, label: "Timeline Prediction" },
-  { icon: DollarSign, label: "Budget Estimation" },
-  { icon: MessageSquare, label: "Meeting Summarizer" },
-  { icon: BookOpen, label: "Documentation Generator" },
-  { icon: GitPullRequest, label: "AI Code Review" },
-  { icon: BarChart3, label: "Project Health Score" },
-  { icon: Bot, label: "AI Chat Assistant" },
+  {
+    icon: Search, label: "Project Analyzer",
+    desc: "Scans your idea and identifies scope, risks, and missing pieces before writing a line of code.",
+    example: 'e.g. "Build an Uber for dogs" → finds hidden complexity around payments, GPS, and vet verification.',
+  },
+  {
+    icon: FileText, label: "Requirement Generator",
+    desc: "Turns a one-sentence idea into structured user stories with acceptance criteria.",
+    example: 'e.g. "Add login" → generates SSO, password reset, 2FA, and role-based access stories.',
+  },
+  {
+    icon: ListChecks, label: "User Story Generator",
+    desc: "Breaks features into granular, testable user stories with priority and effort estimates.",
+    example: 'e.g. "Payment flow" → creates separate stories for checkout, receipts, refunds, and currency.',
+  },
+  {
+    icon: KanbanSquare, label: "Sprint Planner",
+    desc: "Organizes work into realistic sprints based on team velocity and dependency chains.",
+    example: 'e.g. Detects that API must be built before frontend work can start, schedules accordingly.',
+  },
+  {
+    icon: Boxes, label: "Architecture Generator",
+    desc: "Proposes a scalable system architecture with tech stack recommendations.",
+    example: 'e.g. Recommends Next.js + PostgreSQL + Redis for a SaaS dashboard, explains trade-offs.',
+  },
+  {
+    icon: GitBranch, label: "ER Diagram Generator",
+    desc: "Auto-generates entity-relationship diagrams from your requirements.",
+    example: 'e.g. Detects Users, Projects, Tasks, Comments → draws relationships and foreign keys.',
+  },
+  {
+    icon: Users, label: "Developer Matching",
+    desc: "Matches developers to tasks based on skills, availability, and past performance.",
+    example: 'e.g. Assigns a React specialist to the frontend sprint, backend dev to API work.',
+  },
+  {
+    icon: ShieldAlert, label: "Risk Prediction",
+    desc: "Flags technical and timeline risks before they become blockers.",
+    example: 'e.g. "Third-party payment API has 2-week approval time" → alerts 3 sprints early.',
+  },
+  {
+    icon: CalendarClock, label: "Timeline Prediction",
+    desc: "Estimates realistic delivery dates based on similar projects and team capacity.",
+    example: 'e.g. "MVP in 8 weeks" instead of a developer guessing "4 weeks" and missing it.',
+  },
+  {
+    icon: DollarSign, label: "Budget Estimation",
+    desc: "Provides cost breakdowns by feature, sprint, and role.",
+    example: 'e.g. "Auth system: $2,400 | Dashboard: $5,100 | Total: $18,500 ± 15%".',
+  },
+  {
+    icon: MessageSquare, label: "Meeting Summarizer",
+    desc: "Transcribes and summarizes standups, client calls, and sprint reviews.",
+    example: 'e.g. 30-min call → 5 bullet points with decisions, action items, and owners.',
+  },
+  {
+    icon: BookOpen, label: "Documentation Generator",
+    desc: "Auto-generates API docs, README files, and technical specifications.",
+    example: 'e.g. Generates OpenAPI spec from your endpoint code, adds usage examples.',
+  },
+  {
+    icon: GitPullRequest, label: "AI Code Review",
+    desc: "Reviews every PR for bugs, security issues, and style violations.",
+    example: 'e.g. Flags SQL injection risk, suggests performance optimization, checks naming conventions.',
+  },
+  {
+    icon: BarChart3, label: "Health Score",
+    desc: "Continuously scores your project on timeline, budget, quality, and risk.",
+    example: 'e.g. "Score: 72/100 — timeline risk high, code quality excellent".',
+  },
+  {
+    icon: Bot, label: "AI Chat Assistant",
+    desc: "Ask questions about your project in natural language, get instant answers.",
+    example: 'e.g. "What\'s blocking the payment feature?" → shows dependency chain and ETA.',
+  },
 ];
 
 const PLANS = [
   {
-    name: "Starter",
-    price: "$49",
-    tagline: "One idea, moving.",
-    features: ["1 active project", "3 seats", "Core AI analysis", "Email support"],
+    name: "Free",
+    price: "$0",
+    priceNote: "/month",
+    tagline: "Validate your idea",
+    features: [
+      "1 Project", "Idea Analysis", "Requirements", "Cost & Timeline",
+      "Sprint Planning", "Architecture", "Code Review", "Decision Ledger",
+      "Health Score", "Community",
+    ],
+    note: "AI Proposes. Human Oversight available when you upgrade.",
+    checks: [],
+    cta: "Start Free",
     highlighted: false,
   },
   {
-    name: "Growth",
-    price: "$199",
-    tagline: "For founders shipping for real.",
-    features: ["5 active projects", "15 seats", "Full AI suite", "AI code review", "Priority support"],
+    name: "Professional",
+    price: "$49",
+    priceNote: "/month",
+    tagline: "Your AI Technical Project Manager",
+    features: [
+      "Unlimited Projects", "AI Planning", "Impact Simulator", "Stand-up Coach",
+      "Advanced Code Review", "Security Review", "Priority Processing",
+      "Client Portal", "Export Docs", "Email Support", "Human Oversight",
+    ],
+    checks: [
+      "Technical Manager validates critical decisions when risk is high.",
+    ],
+    cta: "Start Building",
     highlighted: true,
   },
   {
-    name: "Scale",
-    price: "$599",
-    tagline: "For teams running a pipeline of builds.",
-    features: ["Unlimited projects", "Unlimited seats", "Priority AI queue", "Custom prompt tuning", "Dedicated manager option"],
+    name: "Team",
+    price: "$199",
+    priceNote: "/month",
+    tagline: "AI + Human Expertise",
+    features: [
+      "Unlimited Members", "Shared Workspace", "Sprint Analytics",
+      "Risk Dashboard", "Architecture Validation", "Advanced Security",
+      "TM Consultation", "Faster SLA", "Team Insights", "API Access",
+      "Priority Support", "Human Oversight",
+    ],
+    checks: [
+      "Direct consultation with a DevPilot Certified Technical Manager.",
+      "Architecture & milestone validation.",
+    ],
+    cta: "Grow Faster",
     highlighted: false,
   },
+  {
+    name: "Enterprise",
+    price: "Custom Pricing",
+    priceNote: "",
+    tagline: "Your External Engineering Office",
+    features: [
+      "Dedicated TM", "Solution Architect", "Executive Dashboard",
+      "Weekly Reviews", "CTO Advisory", "Compliance & Security",
+      "Custom AI Models", "On-premise", "SSO", "SLA Guarantee",
+      "Dedicated CSM", "Human Oversight",
+    ],
+    checks: [
+      "Every critical technical decision supervised by your DevPilot engineering team.",
+    ],
+    cta: "Contact Sales",
+    highlighted: false,
+  },
+];
+
+const WHY_DEVPILOT_ROWS = [
+  { traditional: "AI gives suggestions", devpilot: "AI gives recommendations validated by engineering workflows" },
+  { traditional: "You make decisions alone", devpilot: "Critical decisions can be reviewed by Technical Managers" },
+  { traditional: "No project governance", devpilot: "Decision Ledger & Trust Layer" },
+  { traditional: "Generic code review", devpilot: "Context-aware code review tied to project requirements" },
+  { traditional: "Just another chatbot", devpilot: "AI Technical Project Manager" },
 ];
 
 function fadeUp(delay = 0): Variants {
@@ -110,6 +224,21 @@ function SectionEyebrow({ children }: { children: ReactNode }) {
       <Sparkles className="size-3.5" strokeWidth={2} />
       {children}
     </span>
+  );
+}
+
+function FlowNode({ children, highlight = false }: { children: ReactNode; highlight?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border px-5 py-2.5 text-center text-sm font-medium",
+        highlight
+          ? "border-primary/40 bg-primary/[0.08] text-primary"
+          : "border-border bg-card text-foreground"
+      )}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -165,8 +294,8 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
               DevPilot runs the project.
             </motion.h1>
             <motion.p variants={fadeUp(0.1)} className="mt-5 text-balance text-muted-foreground lg:text-lg">
-              Most tools give you an empty board and leave the technical work to you. DevPilot's AI drafts the requirements,
-              architecture, cost, and sprint plan — then reviews every pull request while a real Technical Manager signs off
+              Most tools give you an empty board and leave the technical work to you. DevPilot&apos;s AI drafts the requirements,
+              architecture, cost, and sprint plan — then reviews every pull request while human oversight signs off
               on the parts that matter.
             </motion.p>
             <motion.div variants={fadeUp(0.15)} className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -194,26 +323,26 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
           <Reveal>
             <SectionEyebrow>The problem</SectionEyebrow>
             <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
-              Non-technical founders can't evaluate technical work.
+              Non-technical founders can&apos;t evaluate technical work.
             </h2>
             <p className="mt-4 max-w-2xl text-muted-foreground">
               Marketplaces like Upwork hand you a list of freelancers and leave the vetting and delivery management to you.
-              Tools like ClickUp or Jira hand you an empty board — they organize the work, they don't do it.
+              Tools like ClickUp or Jira hand you an empty board — they organize the work, they don&apos;t do it.
             </p>
           </Reveal>
 
           <div className="mt-12 grid gap-6 lg:grid-cols-2">
             <Reveal delay={0.05} className="rounded-xl border border-border bg-card/60 p-6">
-              <h3 className="font-display text-lg font-semibold">If you're the client</h3>
+              <h3 className="font-display text-lg font-semibold">If you&apos;re the client</h3>
               <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                <li>Can't tell if the work is actually good, or just looks busy.</li>
+                <li>Can&apos;t tell if the work is actually good, or just looks busy.</li>
                 <li>No real sense of what it should cost or how long it should take.</li>
                 <li>No visibility into risk until a deadline is already missed.</li>
-                <li>Constant fear of being overcharged by people you can't technically judge.</li>
+                <li>Constant fear of being overcharged by people you can&apos;t technically judge.</li>
               </ul>
             </Reveal>
             <Reveal delay={0.12} className="rounded-xl border border-border bg-card/60 p-6">
-              <h3 className="font-display text-lg font-semibold">If you're the developer</h3>
+              <h3 className="font-display text-lg font-semibold">If you&apos;re the developer</h3>
               <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
                 <li>Ad-hoc requests instead of clearly scoped tickets.</li>
                 <li>Time tracking and payment that depend on someone remembering to pay you.</li>
@@ -252,17 +381,81 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
         </div>
       </section>
 
-      {/* Guardrail principle */}
-      <section className="border-t border-border/80 py-16">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6">
-          <Reveal className="rounded-xl border border-primary/25 bg-primary/[0.06] p-5 text-center sm:p-8">
-            <p className="font-display text-xl font-semibold tracking-tight sm:text-2xl lg:text-3xl">
-              AI proposes. Humans approve.
+      {/* Trust Layer */}
+      <section id="trust-layer" className="border-t border-border/80 py-20 lg:py-28">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <Reveal className="text-center">
+            <SectionEyebrow>Trust Layer</SectionEyebrow>
+            <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
+              Why let DevPilot run your project?
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
+              Because every estimate is labeled, every decision is logged, and every payout is approved by two people
+              before it moves.
             </p>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Every cost, timeline, and risk score DevPilot generates is labeled as an estimate — never a guarantee. Money,
-              hiring, and deployment always pass through a human Technical Manager and the client before anything moves.
-            </p>
+          </Reveal>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-2">
+            <Reveal delay={0.05} className="rounded-xl border border-border bg-card/50 p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-warning/10 text-warning">
+                  <span className="text-lg font-bold">~</span>
+                </div>
+                <h3 className="font-display text-base font-semibold">Everything is an estimate — never a guarantee</h3>
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                Every cost, timeline, and risk score DevPilot generates is explicitly labeled as an estimate, not a
+                promise. The AI shows its confidence level and assumptions so you always know how much to trust it.
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.1} className="rounded-xl border border-border bg-card/50 p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+                  <span className="text-lg font-bold">🔒</span>
+                </div>
+                <h3 className="font-display text-base font-semibold">Money & hiring pass through a human</h3>
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                AI proposes budgets and timelines, but no money moves and no developer gets hired without a human
+                Technical Manager and the client both signing off. The AI recommends — the humans decide.
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.15} className="rounded-xl border border-border bg-card/50 p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <span className="text-lg font-bold">✓✓</span>
+                </div>
+                <h3 className="font-display text-base font-semibold">Dual sign-off on quality and milestones</h3>
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                The Technical Manager signs off on code quality, architecture, and delivery. The client signs off on
+                milestones and feature completion. Both must approve before a milestone is marked done.
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.2} className="rounded-xl border border-border bg-card/50 p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-success/10 text-success">
+                  <span className="text-lg font-bold">$</span>
+                </div>
+                <h3 className="font-display text-base font-semibold">No money moves without dual approval</h3>
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                Every payment release requires approval from both the client and the Technical Manager. The AI tracks
+                the budget, flags overruns, and logs every transaction in the Decision Ledger — transparent to all
+                parties.
+              </p>
+            </Reveal>
+          </div>
+
+          <Reveal delay={0.25} className="mt-10 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/[0.06] px-5 py-2 text-sm text-muted-foreground">
+              <FileClock className="size-4 text-primary" />
+              Every decision is logged in the <strong className="text-foreground">Decision Ledger</strong> — a permanent,
+              tamper-evident record your team and auditors can review.
+            </div>
           </Reveal>
         </div>
       </section>
@@ -316,14 +509,20 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
             </h2>
           </Reveal>
 
-          <div className="mt-10 grid grid-cols-1 gap-3 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {AI_FEATURES.map((feature, i) => {
               const Icon = feature.icon;
               return (
-                <Reveal key={feature.label} delay={(i % 5) * 0.04}>
-                  <div className="group h-full rounded-lg border border-border bg-card/50 p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.04]">
-                    <Icon className="size-4 text-primary" strokeWidth={1.75} />
-                    <p className="mt-2.5 text-sm font-medium">{feature.label}</p>
+                <Reveal key={feature.label} delay={(i % 3) * 0.04}>
+                  <div className="group h-full rounded-xl border border-border bg-card/50 p-5 transition-colors hover:border-primary/40 hover:bg-primary/[0.04]">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <Icon className="size-4 text-primary" strokeWidth={1.75} />
+                      </div>
+                      <h4 className="text-sm font-semibold">{feature.label}</h4>
+                    </div>
+                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
+                    <p className="mt-2 text-xs text-muted-foreground/70 italic">{feature.example}</p>
                   </div>
                 </Reveal>
               );
@@ -333,21 +532,24 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="border-t border-border/80 py-20 lg:py-28">
+      <section id="pricing" className="border-t border-border/80 py-16 lg:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal className="text-center">
             <SectionEyebrow>Pricing</SectionEyebrow>
-            <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
-              Priced for how many projects you run.
+            <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+              Built for outcomes, not feature lists.
             </h2>
+            <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground">
+              Reduce project risk. Save time. Prevent failure. Keep an accountable engineering partner in the loop.
+            </p>
           </Reveal>
 
-          <div className="mt-12 grid gap-6 lg:grid-cols-3">
+          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {PLANS.map((plan, i) => (
-              <Reveal key={plan.name} delay={i * 0.06}>
+              <Reveal key={plan.name} delay={i * 0.05}>
                 <div
                   className={cn(
-                    "relative flex h-full flex-col rounded-xl border p-6 transition-transform hover:-translate-y-1",
+                    "relative flex h-full flex-col rounded-xl border p-5 transition-transform hover:-translate-y-1",
                     plan.highlighted ? "border-primary/50 bg-primary/[0.05]" : "border-border bg-card/50"
                   )}
                 >
@@ -355,24 +557,42 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
                     <Badge className="absolute -top-3 left-6">Most popular</Badge>
                   )}
                   <h3 className="font-display text-lg font-semibold">{plan.name}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{plan.tagline}</p>
-                  <p className="mt-5 font-display text-3xl font-semibold">
-                    {plan.price}<span className="text-sm font-normal text-muted-foreground">/mo</span>
+                  <p className="mt-0.5 text-sm text-muted-foreground">{plan.tagline}</p>
+                  <p className="mt-3 font-display text-3xl font-semibold">
+                    {plan.price}
+                    {plan.priceNote && <span className="text-sm font-normal text-muted-foreground">{plan.priceNote}</span>}
                   </p>
-                  <ul className="mt-6 flex-1 space-y-2.5 text-sm">
+                  <div className="mt-4 flex flex-wrap gap-1.5">
                     {plan.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2">
-                        <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
-                        <span className="text-muted-foreground">{f}</span>
-                      </li>
+                      <span key={f} className="inline-block rounded-md border border-border bg-muted/50 px-2 py-0.5 text-[11px] text-muted-foreground">
+                        {f}
+                      </span>
                     ))}
-                  </ul>
+                  </div>
+                  {plan.note && (
+                    <div className="mt-3 border-t border-border pt-3">
+                      <p className="flex items-start gap-1.5 text-[11px] text-primary">
+                        <Check className="mt-0.5 size-3 shrink-0" />
+                        <span>{plan.note}</span>
+                      </p>
+                    </div>
+                  )}
+                  {plan.checks.length > 0 && (
+                    <div className="mt-3 space-y-1 border-t border-border pt-3">
+                      {plan.checks.map((c) => (
+                        <p key={c} className="flex items-start gap-1.5 text-[11px] text-primary">
+                          <Check className="mt-0.5 size-3 shrink-0" />
+                          <span>{c}</span>
+                        </p>
+                      ))}
+                    </div>
+                  )}
                   <Button
-                    className="mt-6"
+                    className="mt-4"
                     variant={plan.highlighted ? "default" : "outline"}
                     onClick={onEnter}
                   >
-                    Get started
+                    {plan.cta}
                   </Button>
                 </div>
               </Reveal>
@@ -381,14 +601,96 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
         </div>
       </section>
 
+      {/* Why DevPilot isn&apos;t just another AI tool */}
+      <section id="why-devpilot" className="border-t border-border/80 py-16 lg:py-20">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          <Reveal>
+            <SectionEyebrow>Built differently</SectionEyebrow>
+            <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+              Why DevPilot isn&apos;t just another AI tool
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Most AI coding tools leave you with a suggestion. DevPilot gives you decisions backed by engineering
+              workflows, risk checks, and human oversight.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.05} className="mt-6 overflow-hidden rounded-xl border border-border">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[520px] text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-card/60 text-left">
+                    <th className="px-5 py-3 font-medium text-muted-foreground">Traditional AI</th>
+                    <th className="px-5 py-3 font-medium text-primary">DevPilot</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {WHY_DEVPILOT_ROWS.map((row, i) => (
+                    <tr key={row.traditional} className={cn("border-b border-border last:border-0", i % 2 === 1 && "bg-card/30")}>
+                      <td className="px-5 py-3 text-muted-foreground">{row.traditional}</td>
+                      <td className="px-5 py-3 font-medium">{row.devpilot}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Human Oversight */}
+      <section id="human-oversight" className="border-t border-border/80 py-20 lg:py-28">
+        <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
+          <Reveal>
+            <SectionEyebrow>Human Oversight</SectionEyebrow>
+            <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
+              AI proposes. Experts validate.
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+              Every AI recommendation passes through a risk engine. Low-risk decisions move forward automatically.
+              High-risk decisions are routed to a Technical Manager before anything gets built.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.08}>
+            <div className="mt-12 flex flex-col items-center gap-3">
+              <FlowNode>Idea</FlowNode>
+              <ArrowDown className="size-5 text-muted-foreground/60" />
+              <FlowNode>AI Analysis</FlowNode>
+              <ArrowDown className="size-5 text-muted-foreground/60" />
+              <FlowNode>AI Recommendation</FlowNode>
+              <ArrowDown className="size-5 text-muted-foreground/60" />
+              <FlowNode highlight>Risk Engine</FlowNode>
+              <div className="my-1 h-6 w-px bg-border" />
+              <div className="grid w-full max-w-xl grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="flex flex-col items-center gap-3">
+                  <FlowNode>Low Risk</FlowNode>
+                  <ArrowDown className="size-5 text-muted-foreground/60" />
+                  <FlowNode>Continue</FlowNode>
+                </div>
+                <div className="flex flex-col items-center gap-3">
+                  <FlowNode>High Risk</FlowNode>
+                  <ArrowDown className="size-5 text-muted-foreground/60" />
+                  <FlowNode>Technical Manager Review</FlowNode>
+                </div>
+              </div>
+              <div className="my-1 h-6 w-px bg-border" />
+              <FlowNode highlight>Decision Ledger</FlowNode>
+              <ArrowDown className="size-5 text-muted-foreground/60" />
+              <FlowNode>Development</FlowNode>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* Final CTA + footer */}
       <section className="border-t border-border/80 py-20">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <Reveal>
             <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
-              Your next project deserves a technical manager.
+              Your next project deserves real oversight.
             </h2>
-            <p className="mt-3 text-muted-foreground">Even if it's an AI one, backed by a human who signs off on it.</p>
+            <p className="mt-3 text-muted-foreground">Even if it starts with AI, a human expert signs off on what matters.</p>
             <div className="mt-7">
               <Button size="lg" onClick={onEnter}>
                 Launch the dashboard

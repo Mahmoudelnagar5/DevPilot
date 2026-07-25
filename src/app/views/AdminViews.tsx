@@ -215,27 +215,55 @@ function ProjectsAdmin() {
 }
 
 function PlansAdmin() {
+  const priceText = (p: (typeof plans)[number]) => {
+    if (typeof p.price === "string") return p.price;
+    if (p.price === 0) return "Free";
+    return money(p.price);
+  };
+  const priceSuffix = (p: (typeof plans)[number]) => (typeof p.price === "string" ? "" : "/mo");
+
   return (
     <div className="p-4 sm:p-6">
       <PageHeader title="Subscription Plans" subtitle="Tiers, limits, and active subscribers" />
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {plans.map((p) => (
-          <Panel key={p.name} className={cn("p-6", p.highlight && "border-primary/40")}>
+          <Panel key={p.name} className={cn("p-5", p.highlight && "border-primary/40")}>
             <div className="flex items-center justify-between">
-              <h3>{p.name}</h3>
+              <h3 className="font-display text-lg font-semibold">{p.name}</h3>
               {p.highlight && <StatusPill status="active" />}
             </div>
-            <div className="mt-2 font-display text-3xl font-semibold">{p.price === 0 ? "Free" : money(p.price)}<span className="text-sm text-muted-foreground font-sans">/mo</span></div>
-            <div className="mt-4 space-y-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2"><Check className="size-4 text-success" /> {p.projects} projects</div>
-              <div className="flex items-center gap-2"><Check className="size-4 text-success" /> {p.seats} seats</div>
-              <div className="flex items-center gap-2"><Check className="size-4 text-success" /> {p.ai}</div>
+            <p className="text-sm text-muted-foreground">{p.tagline}</p>
+            <div className="mt-2 font-display text-2xl font-semibold">{priceText(p)}<span className="text-sm text-muted-foreground font-sans">{priceSuffix(p)}</span></div>
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {p.features.map((f) => (
+                <span key={f} className="inline-block rounded-md border border-border bg-muted/50 px-2 py-0.5 text-[11px] text-muted-foreground">
+                  {f}
+                </span>
+              ))}
             </div>
-            <div className="mt-4 border-t border-border pt-3 text-sm">
+            {p.note && (
+              <div className="mt-3 border-t border-border pt-3">
+                <p className="flex items-start gap-1.5 text-[11px] text-primary">
+                  <Check className="mt-0.5 size-3 shrink-0" />
+                  <span>{p.note}</span>
+                </p>
+              </div>
+            )}
+            {p.checks.length > 0 && (
+              <div className="mt-3 space-y-1 border-t border-border pt-3">
+                {p.checks.map((c) => (
+                  <p key={c} className="flex items-start gap-1.5 text-[11px] text-primary">
+                    <Check className="mt-0.5 size-3 shrink-0" />
+                    <span>{c}</span>
+                  </p>
+                ))}
+              </div>
+            )}
+            <div className="mt-3 border-t border-border pt-3 text-sm">
               <span className="text-muted-foreground">Active subscribers</span>
               <div className="font-display text-xl font-semibold text-primary">{p.active}</div>
             </div>
-            <Button variant="outline" className="mt-4 w-full" onClick={() => toast("Plan editor opened")}>Edit plan</Button>
+            <Button variant={p.highlight ? "default" : "outline"} className="mt-4 w-full" onClick={() => toast("Plan editor opened")}>{p.cta}</Button>
           </Panel>
         ))}
       </div>

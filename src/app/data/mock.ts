@@ -318,9 +318,30 @@ export const platformUsers: PlatformUser[] = [
 ];
 
 export const plans = [
-  { name: "Starter", price: 0, projects: 1, seats: 3, ai: "500 AI actions/mo", active: 210, highlight: false },
-  { name: "Growth", price: 249, projects: 5, seats: 15, ai: "5,000 AI actions/mo", active: 96, highlight: true },
-  { name: "Scale", price: 899, projects: "Unlimited", seats: 50, ai: "50,000 AI actions/mo", active: 36, highlight: false },
+  {
+    name: "Free", price: 0, tagline: "Validate your idea",
+    features: ["1 Project", "Idea Analysis", "Requirements", "Cost & Timeline", "Sprint Planning", "Architecture", "Code Review", "Decision Ledger", "Health Score", "Community"],
+    note: "AI Proposes. Human Oversight available when you upgrade.",
+    checks: [], cta: "Start Free", active: 210, highlight: false,
+  },
+  {
+    name: "Professional", price: 49, tagline: "Your AI Technical Project Manager",
+    features: ["Unlimited Projects", "AI Planning", "Impact Simulator", "Stand-up Coach", "Advanced Code Review", "Security Review", "Priority Processing", "Client Portal", "Export Docs", "Email Support", "Human Oversight"],
+    checks: ["Technical Manager validates critical decisions when risk is high."],
+    note: "", cta: "Start Building", active: 96, highlight: true,
+  },
+  {
+    name: "Team", price: 199, tagline: "AI + Human Expertise",
+    features: ["Unlimited Members", "Shared Workspace", "Sprint Analytics", "Risk Dashboard", "Architecture Validation", "Advanced Security", "TM Consultation", "Faster SLA", "Team Insights", "API Access", "Priority Support", "Human Oversight"],
+    checks: ["Direct consultation with a DevPilot Certified Technical Manager.", "Architecture & milestone validation."],
+    note: "", cta: "Grow Faster", active: 36, highlight: false,
+  },
+  {
+    name: "Enterprise", price: "Custom", tagline: "Your External Engineering Office",
+    features: ["Dedicated TM", "Solution Architect", "Executive Dashboard", "Weekly Reviews", "CTO Advisory", "Compliance & Security", "Custom AI Models", "On-premise", "SSO", "SLA Guarantee", "Dedicated CSM", "Human Oversight"],
+    checks: ["Every critical technical decision supervised by your DevPilot engineering team."],
+    note: "", cta: "Contact Sales", active: 12, highlight: false,
+  },
 ];
 
 export const supportTickets = [
