@@ -4,7 +4,8 @@
 // ---------------------------------------------------------------------------
 import type { AiPlan } from "../data/mock";
 
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY as string | undefined;
+const env = (import.meta as unknown as { env?: Record<string, string> }).env;
+const GROQ_API_KEY = env?.VITE_GROQ_API_KEY;
 if (!GROQ_API_KEY) {
   throw new Error("Missing VITE_GROQ_API_KEY — add it to your .env file.");
 }
