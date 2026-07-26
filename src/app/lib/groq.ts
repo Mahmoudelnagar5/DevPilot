@@ -149,9 +149,13 @@ The JSON must match this exact schema:
   "sprints": [
     { "n": 1, "goal": "string", "pts": 20, "weeks": "Wk 1-2" }
   ],
-  "erdMermaid": "erDiagram\n  ENTITY ||--o{ OTHER : rel",
+  "erdMermaid": "erDiagram\\n  ENTITY ||--o{ OTHER : rel",
   "budget": { "low": 40000, "high": 75000, "currency": "USD" },
-  "timeline": { "weeks": 14, "rationale": "string explaining the estimate" }
+  "timeline": { "weeks": 14, "rationale": "string explaining the estimate" },
+  "squad": [
+    { "role": "Frontend Developer", "count": 1, "skills": ["React", "TypeScript"], "seniorityLevel": "Senior", "weeklyHours": 40, "rationale": "Build dashboard UI" }
+  ],
+  "visualFlow": "flowchart TD\\n  Client([Client]) --> Auth[Auth]\\n  Auth --> API[API]"
 }
 
 Guidelines:
@@ -164,7 +168,9 @@ Guidelines:
 - erdMermaid: valid Mermaid erDiagram with 4-7 entities relevant to the project
 - budget.low / budget.high: realistic USD estimates based on team size, complexity, and timeline (e.g. 35000–200000 range)
 - timeline.weeks: realistic delivery estimate (8–24 weeks) based on scope
-- timeline.rationale: 1-2 sentences explaining how you arrived at the estimate`;
+- timeline.rationale: 1-2 sentences explaining how you arrived at the estimate
+- squad: 2-4 recommended roles with counts, skills, seniority, weekly hours, and rationale
+- visualFlow: valid Mermaid flowchart TD detailing user/data flow across system components`;
 
 /**
  * Calls Groq to generate a full AiPlan for the given project.

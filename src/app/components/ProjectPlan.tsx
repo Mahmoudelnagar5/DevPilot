@@ -9,8 +9,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 import { cn } from "./ui/utils";
 import {
   FileText, ListTree, Network, Database, CalendarRange, ShieldAlert,
-  DollarSign, Check, Pencil, Loader2, AlertTriangle,
+  DollarSign, Check, Pencil, Loader2, AlertTriangle, Users, Workflow,
+  ExternalLink, Sparkles, UserCheck, HeartHandshake,
 } from "lucide-react";
+
 
 
 function Stepper({ status }: { status: Project["status"] }) {
@@ -120,6 +122,8 @@ export function ProjectPlan({ projectId, editable = false }: { projectId: string
   const tabMeta = [
     { key: "reqs", label: t("tab.requirements"), icon: <FileText className="size-4" /> },
     { key: "stories", label: t("tab.userStories"), icon: <ListTree className="size-4" /> },
+    { key: "visualFlow", label: t("tab.visualFlow"), icon: <Workflow className="size-4" /> },
+    { key: "squad", label: t("tab.squad"), icon: <Users className="size-4" /> },
     { key: "arch", label: t("tab.architecture"), icon: <Network className="size-4" /> },
     { key: "erd", label: t("tab.erd"), icon: <Database className="size-4" /> },
     { key: "sprints", label: t("tab.sprints"), icon: <CalendarRange className="size-4" /> },
@@ -200,6 +204,78 @@ export function ProjectPlan({ projectId, editable = false }: { projectId: string
                   </ul>
                 </PlanCard>
               ))}
+            </div>
+          </TabsContent>
+
+          {/* Visual Architecture Flowchart */}
+          <TabsContent value="visualFlow" className="mt-4">
+            <PlanCard title={t("visualFlow.title")} editable={editable}>
+              <p className="mb-4 text-sm text-muted-foreground">{t("visualFlow.subtitle")}</p>
+              {p.aiPlan.visualFlow ? (
+                <div className="rounded-xl border border-border bg-[#0a0e14] p-5">
+                  <div className="mb-3 flex items-center justify-between border-b border-border/50 pb-2">
+                    <span className="flex items-center gap-2 font-mono text-xs text-primary">
+                      <Workflow className="size-4" /> System Flow Diagram
+                    </span>
+                    <span className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-mono text-primary">Mermaid TD</span>
+                  </div>
+                  <pre className="overflow-x-auto font-mono text-xs leading-relaxed text-emerald-400">
+{p.aiPlan.visualFlow}
+                  </pre>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                  Visual flow diagram generated automatically upon plan creation.
+                </div>
+              )}
+            </PlanCard>
+          </TabsContent>
+
+          {/* Squad Recommendation */}
+          <TabsContent value="squad" className="mt-4">
+            <div className="space-y-4">
+              <PlanCard title={t("squad.title")} editable={editable}>
+                <p className="mb-4 text-sm text-muted-foreground">{t("squad.subtitle")}</p>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {(p.aiPlan.squad || [
+                    { role: "Frontend Developer", count: 1, skills: ["React", "TypeScript"], seniorityLevel: "Senior", weeklyHours: 40, rationale: "Build responsive dashboard and user flows." },
+                    { role: "Backend Developer", count: 1, skills: ["Node.js", "PostgreSQL"], seniorityLevel: "Mid", weeklyHours: 40, rationale: "API endpoints, database schema, and integrations." },
+                  ]).map((member, i) => (
+                    <div key={i} className="flex flex-col justify-between rounded-xl border border-border bg-card/60 p-4 transition-colors hover:border-primary/40">
+                      <div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-display font-semibold text-foreground text-sm">{member.role}</span>
+                          <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-xs text-primary">
+                            {member.count}x
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="font-medium text-foreground">{member.seniorityLevel}</span>
+                          <span>·</span>
+                          <span>{member.weeklyHours}h / week</span>
+                        </div>
+                        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{member.rationale}</p>
+                      </div>
+                      <div className="mt-4 flex flex-wrap gap-1 border-t border-border/60 pt-3">
+                        {member.skills.map((skill) => (
+                          <span key={skill} className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-foreground">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </PlanCard>
+
+              {/* Freelance Freedom Note */}
+              <div className="flex gap-3.5 rounded-xl border border-primary/30 bg-primary/[0.06] p-4 text-sm">
+                <HeartHandshake className="mt-0.5 size-5 shrink-0 text-primary" />
+                <div>
+                  <h4 className="font-semibold text-foreground">{t("squad.freelanceNoteTitle")}</h4>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{t("squad.freelanceNoteDesc")}</p>
+                </div>
+              </div>
             </div>
           </TabsContent>
 

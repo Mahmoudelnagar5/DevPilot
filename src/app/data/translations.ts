@@ -73,11 +73,22 @@ export const translations: Record<Language, Record<string, string>> = {
     // Project Plan Tabs
     "tab.requirements": "Requirements",
     "tab.userStories": "User Stories",
+    "tab.visualFlow": "Visual Architecture",
     "tab.architecture": "Architecture",
     "tab.erd": "ERD Model",
+    "tab.squad": "Squad Recommendation",
     "tab.sprints": "Sprint Plan",
     "tab.risk": "Risks & Flags",
     "tab.cost": "Cost & Timeline",
+
+    // Squad & Visual Flow
+    "squad.title": "Recommended Team Squad",
+    "squad.subtitle": "AI-estimated squad breakdown based on scope and tech stack.",
+    "squad.freelanceNoteTitle": "Flexibility & Freedom of Choice",
+    "squad.freelanceNoteDesc": "You are completely free to take these structured requirements, squad specs, and architecture to hire your own developers on freelance platforms (Upwork, Mostaql, etc.) or manage execution via DevPilot.",
+    "visualFlow.title": "Visual Requirements & Process Architecture",
+    "visualFlow.subtitle": "Flowchart mapping text user stories into clear component interactions, permissions, and data flows.",
+
 
     // Requirements Tab
     "req.functional": "Functional Requirements",
@@ -223,11 +234,22 @@ export const translations: Record<Language, Record<string, string>> = {
     // Project Plan Tabs
     "tab.requirements": "المتطلبات",
     "tab.userStories": "قصص المستخدم",
+    "tab.visualFlow": "المُترجم البصري",
     "tab.architecture": "البنية الهندسية",
     "tab.erd": "مخطط قاعدة البيانات ERD",
+    "tab.squad": "تحديد الفريق المطلوب",
     "tab.sprints": "خطة السبرنتات",
     "tab.risk": "المخاطر والتحذيرات",
     "tab.cost": "التكلفة والجدول الزمني",
+
+    // Squad & Visual Flow
+    "squad.title": "الفريق المطلوب للتنفيذ (Squad Recommendation)",
+    "squad.subtitle": "توزيع المهارات والأدوار المطلوبة لإنجاز المشروع وفق التقدير الهندسي بالذكاء الاصطناعي.",
+    "squad.freelanceNoteTitle": "حرية الاختيار والتنفيذ",
+    "squad.freelanceNoteDesc": "لديك الحرية الكاملة لأخذ هذه المتطلبات والمواصفات المحددة والبحث عن الفريق بنفسك على منصات العمل الحر (مثل مستقل، خمسات، Upwork) أو توظيف المطورين المقترحين عبر DevPilot.",
+    "visualFlow.title": "المُترجم البصري للمتطلبات (Visual Architecture Generator)",
+    "visualFlow.subtitle": "خريطة تفاعلية تحول المتطلبات النصية إلى تدفقات بيانية مرئية يسهل فهمها بين جميع أجزاء النظام.",
+
 
     // Requirements Tab
     "req.functional": "المتطلبات الوظيفية (Functional)",

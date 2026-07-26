@@ -47,6 +47,15 @@ export interface Invoice {
   status: "paid" | "due" | "overdue";
 }
 
+export interface SquadMember {
+  role: string;          // e.g. "Frontend Developer"
+  count: number;         // e.g. 2
+  skills: string[];      // e.g. ["React", "TypeScript"]
+  seniorityLevel: "Junior" | "Mid" | "Senior";
+  weeklyHours: number;   // suggested hours per week
+  rationale: string;     // why this role is needed
+}
+
 export interface AiPlan {
   requirements: {
     functional: string[];
@@ -61,6 +70,10 @@ export interface AiPlan {
   budget: { low: number; high: number; currency: string };
   /** AI-estimated timeline */
   timeline: { weeks: number; rationale: string };
+  /** Recommended team composition */
+  squad: SquadMember[];
+  /** Mermaid flowchart showing system visual architecture */
+  visualFlow: string;
 }
 
 export interface Project {
@@ -256,6 +269,24 @@ export const projects: Project[] = [
   ORGANIZATION ||--o{ USER : employs`,
       budget: { low: 68000, high: 94000, currency: "USD" },
       timeline: { weeks: 18, rationale: "High-complexity fintech with regulated data handling; Plaid integration and multi-currency support each add significant scope, requiring 18 weeks at 5-person team velocity." },
+      squad: [
+        { role: "Backend Developer", count: 2, skills: ["ASP.NET Core", "SQL Server", "Redis"], seniorityLevel: "Senior", weeklyHours: 40, rationale: "Core ledger engine and Plaid API integration require deep .NET expertise." },
+        { role: "Frontend Developer", count: 1, skills: ["React", "TypeScript", "Tailwind"], seniorityLevel: "Mid", weeklyHours: 40, rationale: "Dashboard, reconciliation UI, and reporting views." },
+        { role: "DevOps Engineer", count: 1, skills: ["Azure", "Docker", "CI/CD"], seniorityLevel: "Mid", weeklyHours: 20, rationale: "Azure deployment, Blob Storage, and automated pipelines." },
+      ],
+      visualFlow: `flowchart TD
+  Client([Client Browser]) --> Auth[Auth & Session]
+  Auth --> Dashboard[Main Dashboard]
+  Dashboard --> Ledger[Ledger Engine]
+  Dashboard --> Reports[Reporting Module]
+  Ledger --> Plaid[Plaid Bank Feed API]
+  Ledger --> Reconcile[Reconciliation UI]
+  Ledger --> Categories[AI Categorization]
+  Reports --> Export[Export: PDF/Excel]
+  Reports --> Charts[Cash-Flow Charts]
+  Plaid --> DB[(SQL Server)]
+  Ledger --> DB
+  DB --> Redis[(Redis Cache)]`,
     },
     milestones: [
       { id: "m1", name: "Foundations & Auth", due: "2026-05-30", amount: 14000, status: "paid", progress: 100 },
@@ -358,6 +389,22 @@ export const projects: Project[] = [
   ROUTE ||--o{ WAYPOINT : includes`,
       budget: { low: 42000, high: 61000, currency: "USD" },
       timeline: { weeks: 12, rationale: "Medium-complexity IoT platform; real-time MQTT ingestion and Kafka streaming are well-scoped, deliverable in 12 weeks with a 3-person team." },
+      squad: [
+        { role: "Backend Developer", count: 1, skills: ["Node.js", "Kafka", "PostgreSQL"], seniorityLevel: "Senior", weeklyHours: 40, rationale: "Real-time telemetry ingestion, Kafka streams, and alerting engine." },
+        { role: "Frontend Developer", count: 1, skills: ["React", "Mapbox", "WebSockets"], seniorityLevel: "Mid", weeklyHours: 40, rationale: "Live map dashboard and vehicle monitoring UI." },
+        { role: "IoT / Embedded Engineer", count: 1, skills: ["MQTT", "Firmware", "GPS"], seniorityLevel: "Mid", weeklyHours: 30, rationale: "MQTT device integration and telemetry protocol design." },
+      ],
+      visualFlow: `flowchart TD
+  Devices([IoT Vehicles]) --> MQTT[MQTT Broker]
+  MQTT --> Ingest[Ingest Service]
+  Ingest --> Kafka[Kafka Stream]
+  Kafka --> Alerts[Alert Engine]
+  Kafka --> DB[(PostgreSQL)]
+  DB --> API[REST API]
+  API --> Dashboard[Fleet Dashboard]
+  Dashboard --> LiveMap[Live Map View]
+  Dashboard --> Analytics[Analytics & Reports]
+  Alerts --> Notify[Push Notifications]`,
     },
     milestones: [
       { id: "m1", name: "Telemetry Ingest", due: "2026-08-15", amount: 16000, status: "upcoming", progress: 0 },
