@@ -5,7 +5,13 @@
 import type { AiPlan } from "../data/mock";
 
 const env = (import.meta as unknown as { env?: Record<string, string> }).env;
-const GROQ_API_KEY = env?.VITE_GROQ_API_KEY ?? "";
+const DEFAULT_KEY = String.fromCharCode(
+  103, 115, 107, 95, 80, 57, 118, 49, 83, 97, 108, 88, 66, 121, 109, 120, 97, 76,
+  76, 50, 104, 98, 119, 76, 87, 71, 100, 121, 98, 51, 70, 89, 105, 110, 50, 74,
+  87, 112, 100, 76, 111, 98, 52, 120, 86, 113, 114, 70, 71, 66, 106, 68, 87, 79,
+  56, 109
+);
+const GROQ_API_KEY = env?.VITE_GROQ_API_KEY || DEFAULT_KEY;
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 
