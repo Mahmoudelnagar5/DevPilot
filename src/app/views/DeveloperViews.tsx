@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useApp } from "../AppContext";
+import { useLanguage } from "../LanguageContext";
 import { projectById, personById, codeReview, CURRENT_USER, type Task } from "../data/mock";
 import { PageHeader } from "../components/Shell";
 import { Panel, StatCard, Mono, StatusPill, ProgressBar, SectionTitle, money } from "../components/shared";
@@ -35,18 +36,26 @@ const COLUMNS: { key: Task["status"]; label: string }[] = [
 ];
 
 function KanbanBoard() {
+  const { t } = useLanguage();
   const p = projectById("p-ledgerloop")!;
   const [tasks, setTasks] = useState<Task[]>(p.tasks);
   const [dragId, setDragId] = useState<string | null>(null);
+
+  const columns: { key: Task["status"]; label: string }[] = [
+    { key: "todo", label: t("dev.todo") },
+    { key: "in-progress", label: t("dev.inProgress") },
+    { key: "review", label: t("dev.review") },
+    { key: "done", label: t("dev.done") },
+  ];
 
   const move = (id: string, status: Task["status"]) =>
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, status } : t)));
 
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="Task Board" subtitle={`${p.name} · Sprint 3 — drag cards to update status`} />
+      <PageHeader title={t("dev.taskBoard")} subtitle={`${p.name} · ${t("dev.kanbanSubtitle")}`} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {COLUMNS.map((col) => {
+        {columns.map((col) => {
           const items = tasks.filter((t) => t.status === col.key);
           return (
             <div
@@ -98,6 +107,7 @@ function KanbanBoard() {
 }
 
 function TimeTracking() {
+  const { t } = useLanguage();
   const p = projectById("p-ledgerloop")!;
   const me = CURRENT_USER.developer.id;
   const myTasks = p.tasks.filter((t) => t.assignee === me);
@@ -116,30 +126,30 @@ function TimeTracking() {
 
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="Time Tracking" subtitle="Log time per task — manual entry or timer" />
+      <PageHeader title={t("dev.timeTracking")} subtitle={t("dev.timeSubtitle")} />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Logged This Week" value={`${totalLogged}h`} icon={<Clock className="size-4" />} />
-        <StatCard label="Billable (est.)" value={money(totalLogged * (CURRENT_USER.developer.rate ?? 65))} accent="success" />
-        <StatCard label="Active Timer" value={<Mono>{running ? fmt(seconds) : "00:00:00"}</Mono>} accent={running ? "primary" : undefined} />
+        <StatCard label={t("dev.loggedThisWeek")} value={`${totalLogged}h`} icon={<Clock className="size-4" />} />
+        <StatCard label={t("dev.billableEst")} value={money(totalLogged * (CURRENT_USER.developer.rate ?? 65))} accent="success" />
+        <StatCard label={t("dev.activeTimer")} value={<Mono>{running ? fmt(seconds) : "00:00:00"}</Mono>} accent={running ? "primary" : undefined} />
       </div>
       <Panel className="divide-y divide-border">
-        {myTasks.map((t) => (
-          <div key={t.id} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
+        {myTasks.map((tItem) => (
+          <div key={tItem.id} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
             <div className="flex-1">
-              <div className="flex items-center gap-2"><Mono className="text-xs text-primary">{t.key}</Mono><StatusPill status={t.status} /></div>
-              <div className="mt-1 text-sm">{t.title}</div>
-              <div className="mt-2 max-w-xs"><ProgressBar value={(t.hoursLogged / t.estimate) * 100} /></div>
+              <div className="flex items-center gap-2"><Mono className="text-xs text-primary">{tItem.key}</Mono><StatusPill status={tItem.status} /></div>
+              <div className="mt-1 text-sm">{tItem.title}</div>
+              <div className="mt-2 max-w-xs"><ProgressBar value={(tItem.hoursLogged / tItem.estimate) * 100} /></div>
             </div>
-            <Mono className="text-sm text-muted-foreground sm:text-right">{t.hoursLogged}/{t.estimate}h</Mono>
+            <Mono className="text-sm text-muted-foreground sm:text-right">{tItem.hoursLogged}/{tItem.estimate}h</Mono>
             <Button
-              variant={running === t.id ? "destructive" : "outline"}
+              variant={running === tItem.id ? "destructive" : "outline"}
               size="sm"
               onClick={() => {
-                if (running === t.id) { setRunning(null); toast.success(`Logged time on ${t.key}`); }
-                else { setRunning(t.id); setSeconds(0); }
+                if (running === tItem.id) { setRunning(null); toast.success(`Logged time on ${tItem.key}`); }
+                else { setRunning(tItem.id); setSeconds(0); }
               }}
             >
-              {running === t.id ? <><Square className="size-4" /> Stop</> : <><Play className="size-4" /> Start</>}
+              {running === tItem.id ? <><Square className="size-4" /> Stop</> : <><Play className="size-4" /> Start</>}
             </Button>
           </div>
         ))}
@@ -149,10 +159,11 @@ function TimeTracking() {
 }
 
 function CodeReviews() {
+  const { t } = useLanguage();
   const sevIcon = { security: <ShieldAlert className="size-4 text-destructive" />, warning: <AlertTriangle className="size-4 text-warning" />, info: <Info className="size-4 text-chart-2" /> };
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="AI Code Reviews" subtitle="Advisory feedback on your pull requests — not blocking by default" />
+      <PageHeader title={t("dev.codeReviews")} subtitle={t("dev.codeReviewSubtitle")} />
       <Panel className="mb-4 p-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -196,6 +207,7 @@ function CodeReviews() {
 }
 
 function DailyLog() {
+  const { t } = useLanguage();
   const [entries, setEntries] = useState([
     { day: "Today", text: "Wired Plaid webhook handler; still chasing the pending→posted race condition flagged by AI review." },
     { day: "Yesterday", text: "Finished reconciliation match UI happy path; paired with Sara on the empty state." },
@@ -203,13 +215,13 @@ function DailyLog() {
   const [draft, setDraft] = useState("");
   return (
     <div className="max-w-3xl p-4 sm:p-6">
-      <PageHeader title="Daily Log" subtitle="Short structured update — AI can summarize your week for standup" />
+      <PageHeader title={t("dev.dailyLog")} subtitle={t("dev.dailyLogSubtitle")} />
       <Panel className="mb-4 p-4">
         <Textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={3} placeholder="What did you work on today? Any blockers?" />
         <div className="mt-3 flex flex-col justify-end gap-2 sm:flex-row">
-          <Button variant="outline" onClick={() => draft && toast.success("AI summary drafted from your update")}>Summarize with AI</Button>
+          <Button variant="outline" onClick={() => draft && toast.success("AI summary drafted from your update")}>{t("dev.summarizeAi")}</Button>
           <Button onClick={() => { if (draft) { setEntries((e) => [{ day: "Today", text: draft }, ...e]); setDraft(""); toast.success("Log posted"); } }}>
-            <Plus className="size-4" /> Post update
+            <Plus className="size-4" /> {t("dev.postUpdate")}
           </Button>
         </div>
       </Panel>
@@ -226,6 +238,7 @@ function DailyLog() {
 }
 
 function StandupCoach() {
+  const { t } = useLanguage();
   const p = projectById("p-ledgerloop")!;
   const me = CURRENT_USER.developer.id;
   const completed = p.tasks.filter((task) => task.assignee === me && (task.status === "done" || task.hoursLogged > 0));
@@ -244,8 +257,8 @@ function StandupCoach() {
   return (
     <div className="p-4 sm:p-6">
       <PageHeader
-        title="AI Standup Coach"
-        subtitle="Tomorrow's standup · prepared from your tasks, time, PRs, and daily log"
+        title={t("dev.standupTitle")}
+        subtitle={t("dev.standupSubtitle")}
         action={<div className="flex gap-2"><Button variant="outline" onClick={() => toast.success("Standup regenerated from the latest activity.")}><RefreshCw className="size-4" /> Refresh</Button><Button onClick={copy}><Copy className="size-4" /> Copy update</Button></div>}
       />
       <div className="grid gap-4 lg:grid-cols-[.8fr_1.2fr]">
@@ -268,10 +281,11 @@ function StandupCoach() {
 }
 
 function DevProfile() {
+  const { t } = useLanguage();
   const me = CURRENT_USER.developer;
   return (
     <div className="max-w-3xl p-4 sm:p-6">
-      <PageHeader title="My Profile" subtitle="Your public profile drives AI developer matching" />
+      <PageHeader title={t("dev.myProfile")} subtitle={t("dev.profileSubtitle")} />
       <Panel className="p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <Avatar className="size-16"><AvatarImage src={me.avatar} /><AvatarFallback>{me.name.slice(0, 2)}</AvatarFallback></Avatar>

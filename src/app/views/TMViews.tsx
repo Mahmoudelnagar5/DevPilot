@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../AppContext";
+import { useLanguage } from "../LanguageContext";
 import { projectById, personById, people, codeReview } from "../data/mock";
 import { PageHeader } from "../components/Shell";
 import { Panel, StatCard, ScoreRing, ProgressBar, StatusPill, Mono, money, AiTag, SectionTitle } from "../components/shared";
@@ -32,17 +33,18 @@ export function TMViews() {
 }
 
 function TMOverview() {
+  const { t } = useLanguage();
   const { openProject, projects } = useApp();
   const atRisk = projects.filter((p) => p.riskScore > 45).length;
   const pendingApprovals = projects.filter((p) => p.status === "tm-review").length;
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="Delivery Overview" subtitle="Lina Haddad — projects awaiting your review appear here" />
+      <PageHeader title={t("tm.deliveryOverview")} subtitle={t("tm.deliverySubtitle")} />
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Owned Projects" value={projects.length} icon={<FolderKanban className="size-4" />} />
-        <StatCard label="At Risk" value={atRisk} accent="destructive" sub="risk score > 45" icon={<AlertTriangle className="size-4" />} />
-        <StatCard label="Pending Approvals" value={pendingApprovals} accent="warning" sub="awaiting TM review" icon={<Clock className="size-4" />} />
-        <StatCard label="Avg Health" value="77" accent="success" />
+        <StatCard label={t("tm.ownedProjects")} value={projects.length} icon={<FolderKanban className="size-4" />} />
+        <StatCard label={t("tm.atRisk")} value={atRisk} accent="destructive" sub="risk score > 45" icon={<AlertTriangle className="size-4" />} />
+        <StatCard label={t("tm.pendingApprovals")} value={pendingApprovals} accent="warning" sub="awaiting TM review" icon={<Clock className="size-4" />} />
+        <StatCard label={t("tm.avgHealth")} value="77" accent="success" />
       </div>
 
       <SectionTitle hint="AI-flagged items need your judgment">Projects</SectionTitle>
@@ -138,6 +140,7 @@ function PlanReview() {
 }
 
 function Assignments() {
+  const { t } = useLanguage();
   const { addLedgerEntry } = useApp();
   // Rank developers for the currently-open backlog task by simple skill match.
   const task = projectById("p-ledgerloop")!.tasks.find((t) => t.status === "todo")!;
@@ -154,7 +157,7 @@ function Assignments() {
 
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="Developer Assignment" subtitle="AI ranks candidates by skill match & availability — you confirm or override" />
+      <PageHeader title={t("tm.devAssignment")} subtitle={t("tm.devAssignmentSubtitle")} />
       <Panel className="mb-4 p-4">
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <Mono className="text-primary">{task.key}</Mono>
@@ -206,10 +209,11 @@ function Assignments() {
 }
 
 function PRReviews() {
+  const { t } = useLanguage();
   const [decision, setDecision] = useState<"accepted" | "overridden" | null>(null);
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="PR Review" subtitle="Your review sits alongside the AI's — accept or override with reasoning" />
+      <PageHeader title="PR Review" subtitle={t("tm.prReviewSubtitle")} />
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel className="p-5">
           <div className="mb-3 flex flex-wrap items-center gap-2"><GitPullRequest className="size-5 text-primary" /><h3>{codeReview.pr}</h3></div>
@@ -259,13 +263,14 @@ function PRReviews() {
 }
 
 function Reports() {
+  const { t } = useLanguage();
   const p = projectById("p-ledgerloop")!;
   return (
     <div className="p-4 sm:p-6">
       <PageHeader
-        title="Status Reports"
+        title={t("tm.statusReports")}
         subtitle="AI-drafted, exportable reports for clients & stakeholders"
-        action={<Button onClick={() => toast.success("Report exported to PDF")}><FileDown className="size-4" /> Export PDF</Button>}
+        action={<Button onClick={() => toast.success("Report exported to PDF")}><FileDown className="size-4" /> {t("tm.exportPdf")}</Button>}
       />
       <Panel className="max-w-3xl p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">

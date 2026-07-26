@@ -259,6 +259,7 @@ function ClientMilestones() {
 }
 
 function ClientInvoices() {
+  const { t } = useLanguage();
   const { projectId, getProject } = useApp();
   const p = getProject(projectId);
   if (!p) return <div className="p-6 text-muted-foreground">Select a project first.</div>;
@@ -266,20 +267,20 @@ function ClientInvoices() {
   const paid = p.invoices.filter((i) => i.status === "paid").reduce((s, i) => s + i.amount, 0);
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="Invoices & Payments" subtitle={p.name} />
+      <PageHeader title={t("invoices.title")} subtitle={p.name} />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Total Invoiced" value={money(total)} icon={<Wallet className="size-4" />} />
-        <StatCard label="Paid" value={money(paid)} accent="success" />
-        <StatCard label="Outstanding" value={money(total - paid)} accent="warning" />
+        <StatCard label={t("client.totalInvoiced")} value={money(total)} icon={<Wallet className="size-4" />} />
+        <StatCard label={t("client.paid")} value={money(paid)} accent="success" />
+        <StatCard label={t("client.outstanding")} value={money(total - paid)} accent="warning" />
       </div>
       <Panel className="overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Invoice</TableHead>
-              <TableHead>Milestone</TableHead>
-              <TableHead>Issued</TableHead>
-              <TableHead>Amount</TableHead>
+              <TableHead>{t("client.invoice")}</TableHead>
+              <TableHead>{t("client.milestone")}</TableHead>
+              <TableHead>{t("client.issued")}</TableHead>
+              <TableHead>{t("client.amount")}</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
@@ -294,7 +295,7 @@ function ClientInvoices() {
                 <TableCell><StatusPill status={inv.status} /></TableCell>
                 <TableCell className="text-right">
                   {inv.status === "due" ? (
-                    <Button size="sm" onClick={() => toast.success(`Payment of ${money(inv.amount)} initiated.`)}>Pay now</Button>
+                    <Button size="sm" onClick={() => toast.success(`Payment of ${money(inv.amount)} initiated.`)}>{t("invoices.payNow")}</Button>
                   ) : (
                     <span className="text-xs text-muted-foreground">—</span>
                   )}
@@ -309,6 +310,7 @@ function ClientInvoices() {
 }
 
 export function MessagesView() {
+  const { t } = useLanguage();
   const [list, setList] = useState(messages);
   const [text, setText] = useState("");
   const me = "u-nadia";
@@ -319,7 +321,7 @@ export function MessagesView() {
   };
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="Messages" subtitle="LedgerLoop — project channel" />
+      <PageHeader title={t("client.messagesTitle")} subtitle={`LedgerLoop — ${t("client.messagesSubtitle")}`} />
       <Panel className="flex h-[calc(100dvh-14.5rem)] min-h-[26rem] flex-col sm:h-[calc(100dvh-13rem)]">
         <div className="flex-1 space-y-4 overflow-y-auto p-5">
           {list.map((m) => {
@@ -346,12 +348,13 @@ export function MessagesView() {
 }
 
 export function TeamView() {
+  const { t } = useLanguage();
   const { projectId, getProject } = useApp();
   const p = getProject(projectId);
   if (!p) return <div className="p-6 text-muted-foreground">Select a project first.</div>;
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="Project Team" subtitle={`${p.name} — assigned by your Technical Manager`} />
+      <PageHeader title={t("client.teamTitle")} subtitle={`${p.name} — ${t("client.teamSubtitle")}`} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {p.team.map((id) => {
           const m = personById(id)!;
