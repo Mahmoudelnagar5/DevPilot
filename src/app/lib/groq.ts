@@ -5,10 +5,7 @@
 import type { AiPlan } from "../data/mock";
 
 const env = (import.meta as unknown as { env?: Record<string, string> }).env;
-const GROQ_API_KEY = env?.VITE_GROQ_API_KEY;
-if (!GROQ_API_KEY) {
-  throw new Error("Missing VITE_GROQ_API_KEY — add it to your .env file.");
-}
+const GROQ_API_KEY = env?.VITE_GROQ_API_KEY ?? "";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 
@@ -26,6 +23,9 @@ export async function groqChat(
   maxTokens = 3000,
   responseFormatJson = false,
 ): Promise<string> {
+  if (!GROQ_API_KEY) {
+    throw new Error("Missing VITE_GROQ_API_KEY in environment variables.");
+  }
   const body: Record<string, unknown> = {
     model: GROQ_MODEL,
     messages,
@@ -64,6 +64,9 @@ export async function groqChatStream(
   messages: GroqMessage[],
   onChunk: (chunk: string) => void,
 ): Promise<string> {
+  if (!GROQ_API_KEY) {
+    throw new Error("Missing VITE_GROQ_API_KEY in environment variables.");
+  }
   const response = await fetch(GROQ_ENDPOINT, {
     method: "POST",
     headers: {
