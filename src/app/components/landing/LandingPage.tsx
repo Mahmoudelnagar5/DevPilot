@@ -3,12 +3,14 @@ import { motion, useReducedMotion, type Variants } from "motion/react";
 import {
   ArrowRight, ArrowDown, Search, FileText, ListChecks, KanbanSquare, Boxes, GitBranch,
   Users, ShieldAlert, CalendarClock, DollarSign, MessageSquare, BookOpen,
-  GitPullRequest, BarChart3, Bot, Check, X, Sparkles, FileClock,
+  GitPullRequest, BarChart3, Bot, Check, X, Sparkles, FileClock, Globe,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { cn } from "../ui/utils";
 import { PipelineDemo } from "./PipelineDemo";
+import { useLanguage } from "../../LanguageContext";
+
 
 const NAV_LINKS = [
   { href: "#how-it-works", label: "How it works" },
@@ -244,6 +246,7 @@ function FlowNode({ children, highlight = false }: { children: ReactNode; highli
 
 export function LandingPage({ onEnter }: { onEnter: () => void }) {
   const prefersReducedMotion = useReducedMotion();
+  const { lang, toggleLang, t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -252,7 +255,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground font-display text-sm font-bold">D</div>
-            <span className="font-display text-sm font-semibold tracking-tight">DevPilot</span>
+            <span className="font-display text-sm font-semibold tracking-tight">{t("app.title")}</span>
           </div>
           <nav className="hidden md:flex items-center gap-7">
             {NAV_LINKS.map((link) => (
@@ -261,11 +264,21 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
               </a>
             ))}
           </nav>
-          <Button size="sm" onClick={onEnter} className="shrink-0">
-            <span className="hidden sm:inline">Launch dashboard</span>
-            <span className="sm:hidden">Launch</span>
-            <ArrowRight className="size-3.5" />
-          </Button>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={toggleLang}
+              className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground hover:border-primary/50 transition-colors"
+              title="Switch Language / تغيير اللغة"
+            >
+              <Globe className="size-3.5 text-primary" />
+              <span className="font-semibold">{lang === "en" ? "العربيّة" : "English"}</span>
+            </button>
+            <Button size="sm" onClick={onEnter} className="shrink-0">
+              <span className="hidden sm:inline">{t("landing.enterApp")}</span>
+              <span className="sm:hidden">{t("landing.enterApp")}</span>
+              <ArrowRight className="size-3.5" />
+            </Button>
+          </div>
         </div>
       </header>
 

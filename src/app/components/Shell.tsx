@@ -3,10 +3,11 @@ import {
   LayoutDashboard, FolderKanban, CheckSquare, Receipt, MessageSquare, Users,
   Bell, Search, KanbanSquare, Clock, GitPullRequest, UserCircle, ListChecks,
   BarChart3, ShieldCheck, CreditCard, LifeBuoy, Layers, ChevronDown, Sparkles,
-  Menu, X, ScrollText, Presentation,
+  Menu, X, ScrollText, Presentation, Globe,
 } from "lucide-react";
 import { cn } from "./ui/utils";
 import { useApp, DEFAULT_PAGE } from "../AppContext";
+import { useLanguage } from "../LanguageContext";
 import { CURRENT_USER, notifications, type Role } from "../data/mock";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
@@ -18,58 +19,53 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { AiAssistant } from "./AiAssistant";
 
-interface NavItem { key: string; label: string; icon: ReactNode; }
+interface NavItem { key: string; labelKey: string; icon: ReactNode; }
 
 const NAV: Record<Role, NavItem[]> = {
   client: [
-    { key: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="size-4" /> },
-    { key: "project", label: "Project Plan", icon: <FolderKanban className="size-4" /> },
-    { key: "milestones", label: "Milestones", icon: <CheckSquare className="size-4" /> },
-    { key: "invoices", label: "Invoices", icon: <Receipt className="size-4" /> },
-    { key: "messages", label: "Messages", icon: <MessageSquare className="size-4" /> },
-    { key: "team", label: "Team", icon: <Users className="size-4" /> },
-    { key: "trust", label: "Trust Layer", icon: <ScrollText className="size-4" /> },
+    { key: "dashboard", labelKey: "nav.dashboard", icon: <LayoutDashboard className="size-4" /> },
+    { key: "project", labelKey: "nav.projectPlan", icon: <FolderKanban className="size-4" /> },
+    { key: "milestones", labelKey: "nav.milestones", icon: <CheckSquare className="size-4" /> },
+    { key: "invoices", labelKey: "nav.invoices", icon: <Receipt className="size-4" /> },
+    { key: "messages", labelKey: "nav.messages", icon: <MessageSquare className="size-4" /> },
+    { key: "team", labelKey: "nav.team", icon: <Users className="size-4" /> },
+    { key: "trust", labelKey: "nav.trustLayer", icon: <ScrollText className="size-4" /> },
   ],
   developer: [
-    { key: "board", label: "Task Board", icon: <KanbanSquare className="size-4" /> },
-    { key: "time", label: "Time Tracking", icon: <Clock className="size-4" /> },
-    { key: "reviews", label: "Code Reviews", icon: <GitPullRequest className="size-4" /> },
-    { key: "log", label: "Daily Log", icon: <ListChecks className="size-4" /> },
-    { key: "standup", label: "Standup Coach", icon: <Presentation className="size-4" /> },
-    { key: "profile", label: "My Profile", icon: <UserCircle className="size-4" /> },
+    { key: "board", labelKey: "nav.taskBoard", icon: <KanbanSquare className="size-4" /> },
+    { key: "time", labelKey: "nav.timeTracking", icon: <Clock className="size-4" /> },
+    { key: "reviews", labelKey: "nav.codeReviews", icon: <GitPullRequest className="size-4" /> },
+    { key: "log", labelKey: "nav.dailyLog", icon: <ListChecks className="size-4" /> },
+    { key: "standup", labelKey: "nav.standupCoach", icon: <Presentation className="size-4" /> },
+    { key: "profile", labelKey: "nav.myProfile", icon: <UserCircle className="size-4" /> },
   ],
   tm: [
-    { key: "overview", label: "Overview", icon: <LayoutDashboard className="size-4" /> },
-    { key: "review", label: "AI Plan Review", icon: <Sparkles className="size-4" /> },
-    { key: "assign", label: "Assignments", icon: <Users className="size-4" /> },
-    { key: "prs", label: "PR Reviews", icon: <GitPullRequest className="size-4" /> },
-    { key: "reports", label: "Reports", icon: <BarChart3 className="size-4" /> },
-    { key: "trust", label: "Trust Layer", icon: <ScrollText className="size-4" /> },
+    { key: "overview", labelKey: "nav.overview", icon: <LayoutDashboard className="size-4" /> },
+    { key: "review", labelKey: "nav.aiPlanReview", icon: <Sparkles className="size-4" /> },
+    { key: "assign", labelKey: "nav.assignments", icon: <Users className="size-4" /> },
+    { key: "prs", labelKey: "nav.prReviews", icon: <GitPullRequest className="size-4" /> },
+    { key: "reports", labelKey: "nav.reports", icon: <BarChart3 className="size-4" /> },
+    { key: "trust", labelKey: "nav.trustLayer", icon: <ScrollText className="size-4" /> },
   ],
   admin: [
-    { key: "analytics", label: "Analytics", icon: <BarChart3 className="size-4" /> },
-    { key: "users", label: "Users", icon: <Users className="size-4" /> },
-    { key: "projects", label: "Projects", icon: <FolderKanban className="size-4" /> },
-    { key: "plans", label: "Subscriptions", icon: <CreditCard className="size-4" /> },
-    { key: "support", label: "Support", icon: <LifeBuoy className="size-4" /> },
-    { key: "settings", label: "Platform", icon: <ShieldCheck className="size-4" /> },
+    { key: "analytics", labelKey: "nav.analytics", icon: <BarChart3 className="size-4" /> },
+    { key: "users", labelKey: "nav.users", icon: <Users className="size-4" /> },
+    { key: "projects", labelKey: "nav.projects", icon: <FolderKanban className="size-4" /> },
+    { key: "plans", labelKey: "nav.subscriptions", icon: <CreditCard className="size-4" /> },
+    { key: "support", labelKey: "nav.support", icon: <LifeBuoy className="size-4" /> },
+    { key: "settings", labelKey: "nav.platform", icon: <ShieldCheck className="size-4" /> },
   ],
-};
-
-const ROLE_LABEL: Record<Role, string> = {
-  client: "Client",
-  developer: "Developer",
-  tm: "Technical Manager",
-  admin: "Admin",
 };
 
 export function Shell({ children }: { children: ReactNode }) {
   const { role, setRole, page, setPage } = useApp();
+  const { lang, toggleLang, t } = useLanguage();
   const [notifOpen, setNotifOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const user = CURRENT_USER[role];
   const nav = NAV[role];
   const unread = notifications.filter((n) => n.unread).length;
+  const isRTL = lang === "ar";
 
   const navigate = (key: string) => {
     setPage(key);
@@ -77,7 +73,7 @@ export function Shell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex h-dvh w-full overflow-hidden bg-background text-foreground">
+    <div className="flex h-dvh w-full overflow-hidden bg-background text-foreground" dir={isRTL ? "rtl" : "ltr"}>
       {sidebarOpen && (
         <button
           aria-label="Close navigation overlay"
@@ -89,8 +85,15 @@ export function Shell({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] shrink-0 flex-col border-r border-border bg-sidebar transition-transform duration-200 lg:static lg:z-auto lg:w-60 lg:max-w-none lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 z-50 flex w-72 max-w-[85vw] shrink-0 flex-col border-border bg-sidebar transition-transform duration-200 lg:static lg:z-auto lg:w-60 lg:max-w-none lg:translate-x-0",
+          isRTL
+            ? "right-0 border-l"
+            : "left-0 border-r",
+          sidebarOpen
+            ? "translate-x-0"
+            : isRTL
+            ? "translate-x-full"
+            : "-translate-x-full"
         )}
       >
         <div className="flex items-center gap-2 px-5 h-16 border-b border-border">
@@ -98,12 +101,12 @@ export function Shell({ children }: { children: ReactNode }) {
             <Layers className="size-5" />
           </div>
           <div className="leading-tight">
-            <div className="font-display font-bold tracking-tight">DevPilot</div>
+            <div className="font-display font-bold tracking-tight">{t("app.title")}</div>
             <div className="text-[10px] text-muted-foreground font-mono">AI Technical PM</div>
           </div>
           <button
             aria-label="Close navigation"
-            className="ml-auto grid size-9 place-items-center rounded-md border border-border text-muted-foreground lg:hidden"
+            className={cn("grid size-9 place-items-center rounded-md border border-border text-muted-foreground lg:hidden", isRTL ? "mr-auto" : "ml-auto")}
             onClick={() => setSidebarOpen(false)}
           >
             <X className="size-4" />
@@ -125,7 +128,7 @@ export function Shell({ children }: { children: ReactNode }) {
                 )}
               >
                 {item.icon}
-                {item.label}
+                {t(item.labelKey)}
               </button>
             );
           })}
@@ -137,16 +140,18 @@ export function Shell({ children }: { children: ReactNode }) {
               <Sparkles className="size-3.5" /> Llama 3.3 · Groq
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              AI proposes · humans approve. All estimates are advisory.
+              {isRTL
+                ? "الذكاء الاصطناعي يقترح · والخبراء يعتمدون. جميع التقديرات استشارية."
+                : "AI proposes · humans approve. All estimates are advisory."}
             </p>
           </div>
         </div>
       </aside>
 
       {/* Main column */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         {/* Top bar */}
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border px-3 sm:gap-4 sm:px-6">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border px-3 sm:gap-3 sm:px-5">
           <button
             aria-label="Open navigation"
             className="grid size-9 shrink-0 place-items-center rounded-md border border-border text-muted-foreground lg:hidden"
@@ -155,30 +160,45 @@ export function Shell({ children }: { children: ReactNode }) {
             <Menu className="size-4" />
           </button>
 
-          <div className="relative hidden lg:flex items-center flex-1 max-w-md">
-            <Search className="absolute left-3 size-4 text-muted-foreground" />
+          <div className={cn("relative hidden lg:flex items-center flex-1 max-w-md", isRTL && "flex-row-reverse")}>
+            <Search className={cn("absolute size-4 text-muted-foreground", isRTL ? "right-3" : "left-3")} />
             <input
-              placeholder="Search projects, tasks, people…"
-              className="w-full rounded-md border border-border bg-input-background pl-9 pr-3 py-2 text-sm outline-none focus:border-primary/50"
+              placeholder={t("topbar.search")}
+              className={cn(
+                "w-full rounded-md border border-border bg-muted/30 py-2 text-sm outline-none focus:border-primary/50",
+                isRTL ? "pr-9 pl-3 text-right" : "pl-9 pr-3"
+              )}
             />
           </div>
           <div className="flex-1 lg:hidden" />
+
+          {/* Language Toggle */}
+          <button
+            onClick={toggleLang}
+            className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-semibold hover:border-primary/50 transition-colors"
+            title="Switch Language / تغيير اللغة"
+          >
+            <Globe className="size-3.5 text-primary" />
+            <span>{isRTL ? "English" : "العربيّة"}</span>
+          </button>
 
           {/* Role switcher */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-card px-2 py-2 text-sm hover:border-primary/40 sm:px-3">
-                <span className="hidden text-muted-foreground text-xs font-mono sm:inline">VIEW AS</span>
-                <span className="max-w-[7rem] truncate font-medium sm:max-w-none">{ROLE_LABEL[role]}</span>
+                <span className="hidden text-muted-foreground text-xs font-mono sm:inline">
+                  {isRTL ? "عرض كـ" : "VIEW AS"}
+                </span>
+                <span className="max-w-[7rem] truncate font-medium sm:max-w-none">{t(`role.${role}`)}</span>
                 <ChevronDown className="size-4 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Switch role</DropdownMenuLabel>
+              <DropdownMenuLabel>{t("role.switch")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {(Object.keys(ROLE_LABEL) as Role[]).map((r) => (
+              {(["client", "developer", "tm", "admin"] as Role[]).map((r) => (
                 <DropdownMenuItem key={r} onClick={() => setRole(r)}>
-                  {ROLE_LABEL[r]}
+                  {t(`role.${r}`)}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -197,7 +217,7 @@ export function Shell({ children }: { children: ReactNode }) {
               </button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-80 p-0">
-              <div className="border-b border-border px-4 py-3 font-medium">Notifications</div>
+              <div className="border-b border-border px-4 py-3 font-medium">{t("topbar.notifications")}</div>
               <div className="max-h-80 overflow-y-auto divide-y divide-border">
                 {notifications.map((n) => (
                   <div key={n.id} className="flex gap-3 px-4 py-3 text-sm hover:bg-accent/40">
@@ -217,7 +237,8 @@ export function Shell({ children }: { children: ReactNode }) {
             </PopoverContent>
           </Popover>
 
-          <div className="flex items-center gap-2 pl-0 sm:pl-2">
+          {/* User */}
+          <div className="flex items-center gap-2 pl-0 sm:pl-2 border-l border-border ml-0 sm:ml-1 pl-0 sm:pl-3">
             <Avatar className="size-9">
               <AvatarImage src={user.avatar} alt={user.name} />
               <AvatarFallback>{user.name.slice(0, 2)}</AvatarFallback>
@@ -229,6 +250,7 @@ export function Shell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
+        {/* Mobile bottom nav pills */}
         <div className="border-b border-border px-3 py-2 lg:hidden">
           <div className="flex gap-2 overflow-x-auto pb-0.5">
             {nav.map((item) => {
@@ -243,7 +265,7 @@ export function Shell({ children }: { children: ReactNode }) {
                   )}
                 >
                   {item.icon}
-                  {item.label}
+                  {t(item.labelKey)}
                 </button>
               );
             })}

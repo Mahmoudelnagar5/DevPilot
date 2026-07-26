@@ -3,6 +3,7 @@ import {
   personById, lifecycleStages, type Project,
 } from "../data/mock";
 import { useApp } from "../AppContext";
+import { useLanguage } from "../LanguageContext";
 import { Panel, AiTag, Mono, StatusPill, money, ProgressBar } from "./shared";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 import { cn } from "./ui/utils";
@@ -10,6 +11,7 @@ import {
   FileText, ListTree, Network, Database, CalendarRange, ShieldAlert,
   DollarSign, Check, Pencil, Loader2, AlertTriangle,
 } from "lucide-react";
+
 
 function Stepper({ status }: { status: Project["status"] }) {
   const idx = lifecycleStages.findIndex((s) => s.key === status);
@@ -110,9 +112,20 @@ const TAB_META = [
 // editable — when true (TM view) shows edit/approve affordances.
 export function ProjectPlan({ projectId, editable = false }: { projectId: string; editable?: boolean }) {
   const { getProject } = useApp();
+  const { t } = useLanguage();
   const p = getProject(projectId);
   const [tab, setTab] = useState("reqs");
   if (!p) return <div className="text-muted-foreground">Select a project first.</div>;
+
+  const tabMeta = [
+    { key: "reqs", label: t("tab.requirements"), icon: <FileText className="size-4" /> },
+    { key: "stories", label: t("tab.userStories"), icon: <ListTree className="size-4" /> },
+    { key: "arch", label: t("tab.architecture"), icon: <Network className="size-4" /> },
+    { key: "erd", label: t("tab.erd"), icon: <Database className="size-4" /> },
+    { key: "sprints", label: t("tab.sprints"), icon: <CalendarRange className="size-4" /> },
+    { key: "risk", label: t("tab.risk"), icon: <ShieldAlert className="size-4" /> },
+    { key: "cost", label: t("tab.cost"), icon: <DollarSign className="size-4" /> },
+  ];
 
   return (
     <div className="space-y-4">
@@ -144,9 +157,9 @@ export function ProjectPlan({ projectId, editable = false }: { projectId: string
       {(!p.aiPlanStatus || p.aiPlanStatus === "ready") && p.aiPlan && (
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="h-auto max-w-full flex-wrap justify-start overflow-x-auto">
-            {TAB_META.map((t) => (
-              <TabsTrigger key={t.key} value={t.key} className="gap-1.5">
-                {t.icon} {t.label}
+            {tabMeta.map((tabItem) => (
+              <TabsTrigger key={tabItem.key} value={tabItem.key} className="gap-1.5">
+                {tabItem.icon} {tabItem.label}
               </TabsTrigger>
             ))}
           </TabsList>

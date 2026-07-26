@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../AppContext";
+import { useLanguage } from "../LanguageContext";
 import {
   personById, messages, CURRENT_USER, type Project,
 } from "../data/mock";
@@ -12,6 +13,7 @@ import { TrustLayer } from "../components/TrustLayer";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
+
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "../components/ui/table";
@@ -115,6 +117,7 @@ function ProjectCard({ project: p, onOpen }: { project: Project; onOpen: () => v
 
 function NewProjectDialog() {
   const { addProject, openProject, projects } = useApp();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [idea, setIdea] = useState("");
@@ -132,41 +135,40 @@ function NewProjectDialog() {
     addProject({ name: trimmedName, description: trimmedDesc });
     setOpen(false);
     reset();
-    toast("Analyzing your idea with Llama 3.3… plan will appear in seconds.", { icon: "⚡" });
+    toast(t("client.generating"), { icon: "⚡" });
     openProject(id);
   };
 
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
       <DialogTrigger asChild>
-        <Button><Plus className="size-4" /> New Project</Button>
+        <Button><Plus className="size-4" /> {t("client.newProject")}</Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Create a project</DialogTitle>
+          <DialogTitle>{t("client.createProjectTitle")}</DialogTitle>
           <DialogDescription>
-            Describe your idea and DevPilot's AI (Llama 3.3) will draft real requirements, architecture, a sprint plan, and cost estimate — in seconds.
+            {t("client.createProjectDesc")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-sm">Project name</label>
+            <label className="mb-1.5 block text-sm font-medium">{t("client.projectName")}</label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. TaskFlow SaaS" />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm">Describe your idea</label>
+            <label className="mb-1.5 block text-sm font-medium">{t("client.description")}</label>
             <Textarea
               value={idea}
               onChange={(e) => setIdea(e.target.value)}
               rows={5}
-              placeholder="In plain language, what do you want to build? DevPilot's AI will turn this into requirements, an architecture, a plan, and a cost estimate."
+              placeholder={t("client.createProjectDesc")}
             />
           </div>
-          <p className="text-xs text-muted-foreground">You can optionally attach a PDF spec or Figma link after creation.</p>
         </div>
         <DialogFooter>
           <Button onClick={submit} disabled={!name.trim() || !idea.trim()}>
-            Generate plan with AI ⚡
+            {t("client.generateBtn")} ⚡
           </Button>
         </DialogFooter>
       </DialogContent>
