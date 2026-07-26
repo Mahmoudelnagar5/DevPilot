@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { projects as seedProjects, CURRENT_USER, type Role, type Project } from "./data/mock";
+import { generateProjectPlan } from "./lib/groq";
 
 export interface NewProjectInput {
   name: string;
@@ -52,7 +53,8 @@ interface AppState {
   // live project data (shared across all roles)
   projects: Project[];
   getProject: (id: string) => Project | undefined;
-  addProject: (input: NewProjectInput) => Project;
+  addProject: (input: NewProjectInput) => void;
+  updateProject: (id: string, patch: Partial<Project>) => void;
   updateProjectStatus: (id: string, status: Project["status"]) => void;
   ledger: LedgerEntry[];
   addLedgerEntry: (entry: Omit<LedgerEntry, "id" | "timestamp" | "signature" | "actor" | "actorRole">) => void;
@@ -103,6 +105,7 @@ function createProjectFromInput(input: NewProjectInput): Project {
     ],
     invoices: [],
     tasks: [],
+    aiPlanStatus: "generating",
   };
 }
 
@@ -125,11 +128,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const getProject = (id: string) => projects.find((p) => p.id === id);
 
-  const addProject = (input: NewProjectInput) => {
+  const updateProject = useCallback((id: string, patch: Partial<Project>) => {
+    setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  }, []);
+
+  const addProject = useCallback((input: NewProjectInput) => {
     const project = createProjectFromInput(input);
     setProjects((prev) => [project, ...prev]);
-    return project;
-  };
+
+    // Fire real AI generation in the background
+    generateProjectPlan(input.name, input.description)
+      .then((aiPlan) => {
+        // Calculate predictedEnd from AI timeline
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + (aiPlan.timeline.weeks * 7));
+
+        setProjects((prev) =>
+          prev.map((p) =>
+            p.id === project.id
+              ? {
+                  ...p,
+                  aiPlan,
+                  aiPlanStatus: "ready" as const,
+                  // Apply AI-generated budget estimates
+                  budgetLow: aiPlan.budget.low,
+                  budgetHigh: aiPlan.budget.high,
+                  // Apply AI-generated timeline
+                  timelineWeeks: aiPlan.timeline.weeks,
+                  predictedEnd: endDate.toISOString().slice(0, 10),
+                }
+              : p,
+          ),
+        );
+      })
+      .catch(() => {
+        setProjects((prev) =>
+          prev.map((p) =>
+            p.id === project.id ? { ...p, aiPlanStatus: "error" as const } : p,
+          ),
+        );
+      });
+  }, []);
 
   const updateProjectStatus = (id: string, status: Project["status"]) => {
     setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, status } : p)));
@@ -167,7 +206,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <Ctx.Provider
       value={{
         role, setRole, page, setPage, projectId, openProject,
-        projects, getProject, addProject, updateProjectStatus, ledger, addLedgerEntry, decideLedgerEntry,
+        projects, getProject, addProject, updateProject, updateProjectStatus, ledger, addLedgerEntry, decideLedgerEntry,
       }}
     >
       {children}

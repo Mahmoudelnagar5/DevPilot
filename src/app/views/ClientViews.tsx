@@ -114,20 +114,26 @@ function ProjectCard({ project: p, onOpen }: { project: Project; onOpen: () => v
 }
 
 function NewProjectDialog() {
-  const { addProject, openProject } = useApp();
+  const { addProject, openProject, projects } = useApp();
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [idea, setIdea] = useState("");
 
-  const reset = () => { setStep(0); setName(""); setIdea(""); };
+  const reset = () => { setName(""); setIdea(""); };
 
   const submit = () => {
-    const project = addProject({ name: name.trim(), description: idea.trim() });
+    if (!name.trim() || !idea.trim()) return;
+    const trimmedName = name.trim();
+    const trimmedDesc = idea.trim();
+
+    // Build the id the same way AppContext does so we can navigate immediately
+    const id = "p-" + trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Date.now().toString().slice(-4);
+
+    addProject({ name: trimmedName, description: trimmedDesc });
     setOpen(false);
     reset();
-    toast.success("Draft plan generated — sent to Technical Manager for review.");
-    openProject(project.id);
+    toast("Analyzing your idea with Llama 3.3… plan will appear in seconds.", { icon: "⚡" });
+    openProject(id);
   };
 
   return (
@@ -139,44 +145,29 @@ function NewProjectDialog() {
         <DialogHeader>
           <DialogTitle>Create a project</DialogTitle>
           <DialogDescription>
-            Describe your idea and DevPilot's AI will draft requirements, an architecture, a plan, and a cost estimate.
+            Describe your idea and DevPilot's AI (Llama 3.3) will draft real requirements, architecture, a sprint plan, and cost estimate — in seconds.
           </DialogDescription>
         </DialogHeader>
-        {step === 0 ? (
-          <div className="space-y-4">
-            <div>
-              <label className="mb-1.5 block text-sm">Project name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. LedgerLoop" />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm">Describe your idea</label>
-              <Textarea
-                value={idea}
-                onChange={(e) => setIdea(e.target.value)}
-                rows={5}
-                placeholder="In plain language, what do you want to build? DevPilot's AI will turn this into requirements, an architecture, a plan, and a cost estimate."
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">You can optionally attach a PDF spec or Figma link after creation.</p>
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-sm">Project name</label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. TaskFlow SaaS" />
           </div>
-        ) : (
-          <div className="space-y-3 py-2">
-            <div className="flex items-center gap-2 text-primary">
-              <AiTag label="Gemini is analyzing your idea" />
-            </div>
-            {["Detecting domain & complexity", "Drafting requirements", "Proposing architecture", "Estimating cost & timeline", "Building sprint plan"].map((s) => (
-              <div key={s} className="flex items-center gap-2 text-sm">
-                <Check className="size-4 text-success" /> {s}
-              </div>
-            ))}
+          <div>
+            <label className="mb-1.5 block text-sm">Describe your idea</label>
+            <Textarea
+              value={idea}
+              onChange={(e) => setIdea(e.target.value)}
+              rows={5}
+              placeholder="In plain language, what do you want to build? DevPilot's AI will turn this into requirements, an architecture, a plan, and a cost estimate."
+            />
           </div>
-        )}
+          <p className="text-xs text-muted-foreground">You can optionally attach a PDF spec or Figma link after creation.</p>
+        </div>
         <DialogFooter>
-          {step === 0 ? (
-            <Button onClick={() => setStep(1)} disabled={!name.trim() || !idea.trim()}>Generate plan with AI</Button>
-          ) : (
-            <Button onClick={submit}>Send to Technical Manager</Button>
-          )}
+          <Button onClick={submit} disabled={!name.trim() || !idea.trim()}>
+            Generate plan with AI ⚡
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -247,7 +238,7 @@ function ClientMilestones() {
                   </div>
                 </div>
                 {canAct && !decision && (
-                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                     <Button variant="outline" onClick={() => { setDecided((d) => ({ ...d, [m.id]: "rejected" })); addLedgerEntry({ projectId, category: "milestone", title: `${m.name} changes requested`, detail: "Client declined the current deliverable and returned it for revision.", status: "rejected" }); toast("Milestone sent back with comments."); }}>
                       <X className="size-4" /> Request changes
                     </Button>

@@ -47,6 +47,22 @@ export interface Invoice {
   status: "paid" | "due" | "overdue";
 }
 
+export interface AiPlan {
+  requirements: {
+    functional: string[];
+    nonFunctional: string[];
+  };
+  userStories: { epic: string; stories: string[] }[];
+  architecture: string[];
+  risks: { flag: string; severity: "high" | "medium" | "low"; note: string }[];
+  sprints: { n: number; goal: string; pts: number; weeks: string }[];
+  erdMermaid: string;
+  /** AI-estimated budget in USD */
+  budget: { low: number; high: number; currency: string };
+  /** AI-estimated timeline */
+  timeline: { weeks: number; rationale: string };
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -70,6 +86,10 @@ export interface Project {
   tasks: Task[];
   invoices: Invoice[];
   cover: string;
+  /** AI-generated project plan artifacts */
+  aiPlan?: AiPlan;
+  /** Tracks generation state for newly created projects */
+  aiPlanStatus?: "generating" | "ready" | "error";
 }
 
 const AV = (seed: string) =>
@@ -177,6 +197,66 @@ export const projects: Project[] = [
     predictedEnd: "2026-09-11",
     team: ["u-lina", "u-youssef", "u-sara", "u-devon", "u-mei"],
     cover: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&h=400&fit=crop&auto=format",
+    aiPlanStatus: "ready",
+    aiPlan: {
+      requirements: {
+        functional: [
+          "Double-entry bookkeeping engine with immutable transaction ledger",
+          "Bank feed aggregation via Plaid with automatic reconciliation",
+          "Multi-currency invoicing with configurable tax rules per region",
+          "Role-based access for Owner, Accountant, and Read-only viewer",
+          "Exportable financial statements (P&L, Balance Sheet, Cash Flow)",
+        ],
+        nonFunctional: [
+          "Sub-300ms P95 latency on ledger queries up to 5M rows",
+          "SOC 2 Type II aligned audit logging on every mutation",
+          "99.9% uptime for the core accounting API",
+          "Encryption at rest (AES-256) and in transit (TLS 1.3)",
+        ],
+      },
+      userStories: [
+        { epic: "Onboarding", stories: [
+          "As a founder, I want to connect my bank account so that transactions import automatically.",
+          "As a founder, I want a guided chart-of-accounts setup so that I don't need an accountant to start.",
+        ]},
+        { epic: "Ledger", stories: [
+          "As an accountant, I want to categorize transactions in bulk so that month-end close is faster.",
+          "As an accountant, I want an immutable audit trail so that I can prove compliance.",
+        ]},
+        { epic: "Reporting", stories: [
+          "As a founder, I want a real-time cash-flow view so that I can make runway decisions.",
+        ]},
+      ],
+      architecture: [
+        "Next.js 15 (App Router) frontend on Vercel edge",
+        "ASP.NET Core 9 API — Clean Architecture + CQRS/MediatR",
+        "SQL Server primary with read replicas for reporting",
+        "Redis for session cache and idempotency keys",
+        "Azure Blob Storage (SAS-scoped) for statement exports",
+        "Groq / Llama 3.3 service layer for analysis + categorization",
+      ],
+      risks: [
+        { flag: "Plaid integration scope underestimated", severity: "high", note: "Bank feed edge cases (pending vs. posted) commonly add 1–2 sprints." },
+        { flag: "Multi-currency tax rules ambiguous", severity: "medium", note: "Requirements name 'configurable tax rules' without listing target jurisdictions." },
+        { flag: "Single backend engineer at 25% availability", severity: "medium", note: "Devon is the only .NET resource and is near capacity across projects." },
+      ],
+      sprints: [
+        { n: 1, goal: "Auth, org setup, chart-of-accounts wizard", pts: 21, weeks: "Wk 1–2" },
+        { n: 2, goal: "Ledger engine + immutable transaction model", pts: 26, weeks: "Wk 3–4" },
+        { n: 3, goal: "Plaid ingest + reconciliation UI", pts: 24, weeks: "Wk 5–7" },
+        { n: 4, goal: "Multi-currency + reporting endpoints", pts: 21, weeks: "Wk 8–9" },
+        { n: 5, goal: "AI categorization + exports + hardening", pts: 18, weeks: "Wk 10–12" },
+      ],
+      erdMermaid: `erDiagram
+  ORGANIZATION ||--o{ ACCOUNT : owns
+  ACCOUNT ||--o{ TRANSACTION : records
+  TRANSACTION }o--|| CATEGORY : classified_by
+  ORGANIZATION ||--o{ INVOICE : issues
+  INVOICE ||--o{ LINE_ITEM : contains
+  ORGANIZATION ||--o{ USER : employs`,
+      budget: { low: 68000, high: 94000, currency: "USD" },
+      timeline: { weeks: 18, rationale: "High-complexity fintech with regulated data handling; Plaid integration and multi-currency support each add significant scope, requiring 18 weeks at 5-person team velocity." },
+    },
     milestones: [
       { id: "m1", name: "Foundations & Auth", due: "2026-05-30", amount: 14000, status: "paid", progress: 100 },
       { id: "m2", name: "Ledger Engine", due: "2026-07-04", amount: 22000, status: "approved", progress: 100 },
@@ -219,6 +299,66 @@ export const projects: Project[] = [
     predictedEnd: "2026-10-12",
     team: ["u-lina", "u-mei", "u-sara"],
     cover: "https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=800&h=400&fit=crop&auto=format",
+    aiPlanStatus: "ready",
+    aiPlan: {
+      requirements: {
+        functional: [
+          "Real-time GPS telemetry ingestion from IoT devices via MQTT",
+          "Predictive maintenance alerts based on vehicle sensor anomalies",
+          "Route optimization engine with traffic-aware ETA calculations",
+          "Driver behavior scoring (harsh braking, acceleration, idling)",
+          "Fleet manager dashboard with live map and historical playback",
+        ],
+        nonFunctional: [
+          "Ingest up to 10,000 telemetry events/second with sub-500ms latency",
+          "99.95% uptime SLA for the alerting pipeline",
+          "GDPR-compliant driver data handling and retention policies",
+          "Mobile-responsive dashboard for field managers",
+        ],
+      },
+      userStories: [
+        { epic: "Telemetry", stories: [
+          "As a fleet manager, I want to see live vehicle locations so I can respond to incidents immediately.",
+          "As a dispatcher, I want ETA predictions so I can manage client expectations accurately.",
+        ]},
+        { epic: "Maintenance", stories: [
+          "As a mechanic, I want predictive alerts so I can schedule servicing before breakdowns occur.",
+          "As a fleet manager, I want maintenance cost forecasts so I can budget effectively.",
+        ]},
+        { epic: "Analytics", stories: [
+          "As an executive, I want a weekly fuel efficiency report so I can reduce operating costs.",
+        ]},
+      ],
+      architecture: [
+        "React 18 + Mapbox GL JS frontend on Vercel",
+        "Node.js / Fastify API with WebSocket support for live feeds",
+        "InfluxDB for time-series telemetry storage",
+        "Kafka for high-throughput event streaming",
+        "PostgreSQL for fleet metadata and user management",
+        "Groq / Llama 3.3 for anomaly detection and alert summarization",
+      ],
+      risks: [
+        { flag: "Hardware dependency on third-party OBD dongles", severity: "high", note: "Firmware differences across dongle manufacturers may require custom parsers." },
+        { flag: "Unclear SLA for MQTT broker uptime", severity: "medium", note: "No formal uptime commitment from the IoT device vendor yet." },
+        { flag: "Map licensing costs underestimated", severity: "low", note: "Mapbox tile usage costs can spike significantly with fleet scale." },
+      ],
+      sprints: [
+        { n: 1, goal: "MQTT ingest + device registry + map shell", pts: 18, weeks: "Wk 1–2" },
+        { n: 2, goal: "Live telemetry dashboard + WebSocket feed", pts: 22, weeks: "Wk 3–4" },
+        { n: 3, goal: "Alerting engine + maintenance predictions", pts: 20, weeks: "Wk 5–7" },
+        { n: 4, goal: "Route optimizer + driver scoring", pts: 19, weeks: "Wk 8–10" },
+        { n: 5, goal: "Analytics, reporting, hardening", pts: 15, weeks: "Wk 11–12" },
+      ],
+      erdMermaid: `erDiagram
+  FLEET ||--o{ VEHICLE : contains
+  VEHICLE ||--o{ TELEMETRY_EVENT : emits
+  VEHICLE ||--o{ MAINTENANCE_ALERT : triggers
+  VEHICLE }o--|| DRIVER : assigned_to
+  FLEET ||--o{ ROUTE : plans
+  ROUTE ||--o{ WAYPOINT : includes`,
+      budget: { low: 42000, high: 61000, currency: "USD" },
+      timeline: { weeks: 12, rationale: "Medium-complexity IoT platform; real-time MQTT ingestion and Kafka streaming are well-scoped, deliverable in 12 weeks with a 3-person team." },
+    },
     milestones: [
       { id: "m1", name: "Telemetry Ingest", due: "2026-08-15", amount: 16000, status: "upcoming", progress: 0 },
       { id: "m2", name: "Alerting Engine", due: "2026-09-12", amount: 20000, status: "upcoming", progress: 0 },

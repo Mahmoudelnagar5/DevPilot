@@ -134,7 +134,7 @@ export function Shell({ children }: { children: ReactNode }) {
         <div className="p-3 border-t border-border">
           <div className="rounded-md bg-muted/50 p-3">
             <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
-              <Sparkles className="size-3.5" /> Gemini engine
+              <Sparkles className="size-3.5" /> Llama 3.3 · Groq
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
               AI proposes · humans approve. All estimates are advisory.
