@@ -18,7 +18,7 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
   const { t } = useLanguage();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
 
-  // Localized roles
+  // Localized roles (Admin removed - admin accounts are created manually)
   const ROLES: { value: Role; label: string; description: string; color: string; icon: string }[] = [
     {
       value: "client",
@@ -41,13 +41,8 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
       color: "from-amber-500 to-orange-500",
       icon: "🎯",
     },
-    {
-      value: "admin",
-      label: t("auth.adminRole"),
-      description: t("auth.adminDesc"),
-      color: "from-rose-500 to-pink-500",
-      icon: "⚙️",
-    },
+    // ⚠️ Admin role is NOT available for public signup
+    // Admin accounts must be created manually in Supabase
   ];
 
   // Form state
@@ -154,9 +149,9 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
   const selectedRoleConfig = ROLES.find((r) => r.value === selectedRole)!;
 
   return (
-    <div className="min-h-screen w-full flex bg-background text-foreground overflow-hidden">
+    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-background text-foreground overflow-hidden">
       {/* ── Left panel (branding) ── */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+      <div className="w-full lg:w-1/2 relative overflow-hidden order-2 lg:order-1">
         {/* Gradient bg */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
         {/* Grid pattern */}
@@ -172,7 +167,7 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
         <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-primary/20 blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full bg-violet-500/20 blur-3xl" />
 
-        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
+        <div className="relative z-10 flex flex-col justify-between p-6 sm:p-12 w-full min-h-[200px] lg:min-h-screen">
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
@@ -184,8 +179,8 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
             </div>
           </div>
 
-          {/* Hero text */}
-          <div className="space-y-6">
+          {/* Hero text - hidden on mobile to save space */}
+          <div className="space-y-6 hidden lg:block">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs text-primary">
               <Sparkles className="size-3" />
               {t("auth.poweredByGroq")}
@@ -216,35 +211,29 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
             </div>
           </div>
 
-          {/* Social proof */}
-          <div className="flex items-center gap-4 border-t border-white/10 pt-6">
+          {/* Social proof - NOW VISIBLE ON MOBILE! */}
+          <div className="flex items-center gap-4 border-t border-white/10 pt-4 lg:pt-6">
             <div className="text-center">
-              <div className="text-2xl font-bold text-white">{stats.totalProjects}+</div>
-              <div className="text-xs text-slate-500">{t("auth.activeProjects")}</div>
+              <div className="text-xl lg:text-2xl font-bold text-white">{stats.totalProjects}+</div>
+              <div className="text-[10px] lg:text-xs text-slate-500">{t("auth.activeProjects")}</div>
             </div>
             <div className="h-8 w-px bg-white/10" />
             <div className="text-center">
-              <div className="text-2xl font-bold text-white">{formatNumber(stats.totalUsers)}+</div>
-              <div className="text-xs text-slate-500">{t("auth.users")}</div>
+              <div className="text-xl lg:text-2xl font-bold text-white">{formatNumber(stats.totalUsers)}+</div>
+              <div className="text-[10px] lg:text-xs text-slate-500">{t("auth.users")}</div>
             </div>
             <div className="h-8 w-px bg-white/10" />
             <div className="text-center">
-              <div className="text-2xl font-bold text-white">{stats.totalVisitors}+</div>
-              <div className="text-xs text-slate-500">{t("auth.platformVisitors")}</div>
+              <div className="text-xl lg:text-2xl font-bold text-white">{stats.totalVisitors}+</div>
+              <div className="text-[10px] lg:text-xs text-slate-500">{t("auth.platformVisitors")}</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* ── Right panel (form) ── */}
-      <div className="flex flex-1 flex-col items-center justify-center p-6 sm:p-10 lg:p-12 overflow-y-auto">
-        {/* Mobile logo */}
-        <div className="flex items-center gap-2 mb-8 lg:hidden">
-          <div className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Layers className="size-4" />
-          </div>
-          <span className="font-bold text-lg">{t("app.title")}</span>
-        </div>
+      <div className="flex flex-1 flex-col items-center justify-center p-6 sm:p-10 lg:p-12 overflow-y-auto order-1 lg:order-2">
+        {/* Mobile logo - removed since stats section now shows on mobile */}
 
         <div className="w-full max-w-md">
           {/* Tab switcher */}
@@ -393,7 +382,7 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
             {mode === "signup" && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t("auth.yourRole")}</label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {ROLES.map((r) => (
                     <button
                       key={r.value}
