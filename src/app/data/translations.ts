@@ -446,8 +446,6 @@ export const translations: Record<Language, Record<string, string>> = {
   },
   ar: {
     // General & Header
-  ar: {
-    // General & Header
     "app.title": "DevPilot",
     "app.tagline": "نظام تشغيل وإدارة شركات البرمجيات بالذكاء الاصطناعي",
     "nav.dashboard": "لوحة التحكم",
