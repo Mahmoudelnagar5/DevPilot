@@ -56,14 +56,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Fetch profile from public.profiles
   const fetchProfile = useCallback(async (uid: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", uid)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", uid)
+        .single();
 
-    if (!error && data) {
-      setProfile(data as Profile);
+      if (!error && data) {
+        setProfile(data as Profile);
+      } else if (error) {
+        console.warn(`Failed to fetch profile for ${uid}:`, error);
+      }
+    } catch (err) {
+      console.warn("Error fetching profile:", err);
     }
   }, []);
 

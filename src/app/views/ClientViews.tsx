@@ -15,6 +15,7 @@ import { TrustLayer } from "../components/TrustLayer";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
+import { groqChatStream } from "../lib/groq";
 
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -55,7 +56,7 @@ function ClientDashboard() {
   
   // Get user name from profile or auth metadata
   const userName = profile?.full_name || (authUser?.user_metadata?.full_name as string) || authUser?.email?.split("@")[0] || "User";
-  const greeting = t("client.welcome").replace("Nadia", userName);
+  const greeting = `${t("client.welcome")}, ${userName}`;
   
   return (
     <div className="p-4 sm:p-6">
@@ -66,13 +67,13 @@ function ClientDashboard() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Active Projects" value={projects.length} sub={`${inExecution} in execution · ${awaiting} awaiting approval`} icon={<Activity className="size-4" />} />
-        <StatCard label="Avg Health" value={avgHealth} accent="success" sub={t("client.compositeAiScore")} icon={<TrendingUp className="size-4" />} />
-        <StatCard label="Committed Budget" value={money(committed)} sub={`${money(spent)} ${t("plan.spent")}`} icon={<Wallet className="size-4" />} />
-        <StatCard label="Next Milestone" value="Aug 1" accent="warning" sub="Bank Reconciliation" />
+        <StatCard label={t("client.activeProjects")} value={projects.length} sub={`${inExecution} ${t("client.inExecution")} · ${awaiting} ${t("client.awaitingApproval")}`} icon={<Activity className="size-4" />} />
+        <StatCard label={t("client.avgHealth")} value={avgHealth} accent="success" sub={t("client.compositeAiScore")} icon={<TrendingUp className="size-4" />} />
+        <StatCard label={t("client.committedBudget")} value={money(committed)} sub={`${money(spent)} ${t("plan.spent")}`} icon={<Wallet className="size-4" />} />
+        <StatCard label={t("client.nextMilestone")} value="Aug 1" accent="warning" sub="Bank Reconciliation" />
       </div>
 
-      <SectionTitle hint={t("client.clickCardToOpen")}>Projects</SectionTitle>
+      <SectionTitle hint={t("client.clickCardToOpen")}>{t("client.projects")}</SectionTitle>
       <div className="grid gap-4 lg:grid-cols-2">
         {projects.map((proj) => (
           <ProjectCard key={proj.id} project={proj} onOpen={() => openProject(proj.id)} />
@@ -129,17 +130,178 @@ function NewProjectDialog() {
   const { addProject, openProject, projects } = useApp();
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<"initial" | "chat" | "final">("initial");
   const [name, setName] = useState("");
   const [idea, setIdea] = useState("");
+  const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "ai"; text: string }>>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [refinedData, setRefinedData] = useState<{
+    name: string;
+    description: string;
+    platform?: string;
+    techStack?: string;
+    features?: string[];
+    conversationSummary?: string;
+  } | null>(null);
 
-  const reset = () => { setName(""); setIdea(""); };
+  const reset = () => { 
+    setName(""); 
+    setIdea(""); 
+    setStep("initial");
+    setChatMessages([]);
+    setChatInput("");
+    setRefinedData(null);
+  };
 
-  const submit = () => {
+  const startChat = () => {
     if (!name.trim() || !idea.trim()) return;
-    const trimmedName = name.trim();
-    const trimmedDesc = idea.trim();
+    setStep("chat");
+    // Initial AI message
+    setChatMessages([{
+      role: "ai",
+      text: `شكراً! عشان أفهم فكرتك أحسن و أطلع requirements دقيقة، عندي شوية أسئلة:\n\n1️⃣ أنت محتاج تطبيق إيه؟\n   • تطبيق ويب (Web Application)\n   • تطبيق موبايل (iOS/Android)\n   • تطبيق ديسكتوب\n   • أكتر من واحد من دول\n\n2️⃣ عندك تكنولوجي معينة تحب تستخدمها؟ (مثلاً: React، Vue، Node.js، Python، إلخ)\nلو مش عارف، قولي و أنا هقترح عليك الأنسب! 👍`
+    }]);
+  };
 
-    const createdProject = addProject({ name: trimmedName, description: trimmedDesc });
+  const sendMessage = async () => {
+    if (!chatInput.trim() || loading) return;
+    
+    const userMessage = chatInput.trim();
+    setChatInput("");
+    setChatMessages(prev => [...prev, { role: "user", text: userMessage }]);
+    setLoading(true);
+
+    try {
+      // Build conversation context for Groq
+      const conversationHistory = chatMessages.map(m => ({
+        role: m.role === "user" ? "user" : "assistant" as const,
+        content: m.text
+      }));
+      
+      // Add system context
+      const systemPrompt = `أنت مساعد ذكي متخصص في تحليل وتوضيح أفكار المشاريع التقنية.
+      
+معلومات المشروع الحالية:
+- اسم المشروع: ${name}
+- الوصف الأولي: ${idea}
+
+مهمتك:
+1. اسأل أسئلة توضيحية محددة لفهم الفكرة بشكل أفضل (Platform، Technology Stack، User Types، Core Features، Timeline، Budget)
+2. بعد 3-4 تبادلات، اجمع كل المعلومات وأعلمني أن التوضيح اكتمل
+3. استخدم اللغة العربية بشكل طبيعي وودود
+4. ركّز على جمع معلومات محددة وعملية
+
+قواعد:
+- إذا جمعت معلومات كافية عن (Platform + Tech Stack + User Types + Core Features)، قل: "✅ REFINEMENT_COMPLETE" في بداية ردك
+- لا تطرح أكثر من سؤالين في المرة الواحدة
+- كن محدداً في أسئلتك`;
+
+      const messages = [
+        { role: "system" as const, content: systemPrompt },
+        ...conversationHistory,
+        { role: "user" as const, content: userMessage }
+      ];
+
+      // Add placeholder for streaming AI response
+      setChatMessages(prev => [...prev, { role: "ai", text: "" }]);
+
+      // Call Groq API with streaming
+      let aiResponse = "";
+      await groqChatStream(messages, (chunk) => {
+        aiResponse += chunk;
+        // Update ONLY the last message (the AI response)
+        setChatMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: "ai", text: aiResponse };
+          return updated;
+        });
+      });
+
+      // Check if refinement is complete
+      if (aiResponse.includes("✅ REFINEMENT_COMPLETE") || aiResponse.includes("REFINEMENT_COMPLETE")) {
+        // Build full conversation context for extraction
+        const fullConversation = [...chatMessages, { role: "user", text: userMessage }, { role: "ai", text: aiResponse }];
+        
+        // Extract platform info from conversation
+        const conversationText = fullConversation.map(m => m.text.toLowerCase()).join(" ");
+        let platform = "To be determined";
+        let techStack = "To be determined";
+        
+        // Detect platform
+        if (conversationText.includes("موبايل") || conversationText.includes("mobile") || conversationText.includes("ios") || conversationText.includes("android")) {
+          platform = "Mobile (iOS/Android)";
+          techStack = "React Native / Flutter + Node.js Backend";
+        } else if (conversationText.includes("ويب") || conversationText.includes("web")) {
+          platform = "Web Application";
+          techStack = "React + Node.js";
+        } else if (conversationText.includes("ديسكتوب") || conversationText.includes("desktop")) {
+          platform = "Desktop Application";
+          techStack = "Electron + React";
+        }
+        
+        // Detect hardware/IoT
+        if (conversationText.includes("esp") || conversationText.includes("بصمة") || conversationText.includes("fingerprint") || conversationText.includes("sensor")) {
+          techStack = `${techStack} + ESP32/Arduino (Fingerprint Sensor) + MQTT/BLE`;
+        }
+        
+        // Build enhanced description with conversation summary
+        const conversationSummary = fullConversation
+          .filter(m => m.role === "user")
+          .map((m, i) => `Q${i + 1}: ${m.text}`)
+          .join("\n");
+        
+        setRefinedData({
+          name: name.trim(),
+          description: idea.trim(),
+          platform,
+          techStack,
+          features: [],
+          conversationSummary
+        });
+        setStep("final");
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error in AI conversation:", error);
+      setChatMessages(prev => {
+        // Update the last AI message with error
+        const updated = [...prev];
+        if (updated.length > 0 && updated[updated.length - 1].role === "ai") {
+          updated[updated.length - 1] = {
+            role: "ai",
+            text: "عذراً، حدث خطأ في الاتصال بالـ AI. حاول مرة أخرى."
+          };
+        } else {
+          updated.push({
+            role: "ai",
+            text: "عذراً، حدث خطأ في الاتصال بالـ AI. حاول مرة أخرى."
+          });
+        }
+        return updated;
+      });
+      setLoading(false);
+    }
+  };
+
+  const generateProject = () => {
+    if (!refinedData) return;
+    
+    // Build enhanced description with conversation insights
+    const enhancedDescription = `${refinedData.description}
+
+=== Platform & Technology ===
+Platform: ${refinedData.platform}
+Tech Stack: ${refinedData.techStack}
+
+=== Conversation Insights ===
+${refinedData.conversationSummary || 'No additional details'}`;
+
+    const createdProject = addProject({ 
+      name: refinedData.name, 
+      description: enhancedDescription
+    });
     setOpen(false);
     reset();
     toast(t("client.generating"), { icon: "⚡" });
@@ -151,32 +313,167 @@ function NewProjectDialog() {
       <DialogTrigger asChild>
         <Button><Plus className="size-4" /> {t("client.newProject")}</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
-          <DialogTitle>{t("client.createProjectTitle")}</DialogTitle>
+          <DialogTitle>
+            {step === "initial" && t("client.createProjectTitle")}
+            {step === "chat" && t("client.clarifyIdea")}
+            {step === "final" && t("client.readyToGenerate")}
+          </DialogTitle>
           <DialogDescription>
-            {t("client.createProjectDesc")}
+            {step === "initial" && t("client.createProjectDesc")}
+            {step === "chat" && t("client.answerQuestions")}
+            {step === "final" && t("client.reviewInfo")}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium">{t("client.projectName")}</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("client.projectNamePlaceholder")} />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium">{t("client.description")}</label>
-            <Textarea
-              value={idea}
-              onChange={(e) => setIdea(e.target.value)}
-              rows={5}
-              placeholder={t("client.createProjectDesc")}
-            />
-          </div>
+
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {step === "initial" && (
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">{t("client.projectName")}</label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("client.projectNamePlaceholder")} />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">{t("client.description")}</label>
+                <Textarea
+                  value={idea}
+                  onChange={(e) => setIdea(e.target.value)}
+                  rows={5}
+                  placeholder={t("client.descriptionPlaceholder")}
+                />
+              </div>
+            </div>
+          )}
+
+          {step === "chat" && (
+            <div className="flex flex-col gap-3 h-full min-h-[400px]">
+              <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                {chatMessages.map((msg, idx) => (
+                  <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[85%] rounded-lg px-4 py-2.5 text-sm ${
+                      msg.role === "user" 
+                        ? "bg-primary text-primary-foreground" 
+                        : "bg-muted text-foreground"
+                    }`}>
+                      <div className="whitespace-pre-wrap leading-relaxed">{msg.text.replace("✅ REFINEMENT_COMPLETE", "").trim()}</div>
+                    </div>
+                  </div>
+                ))}
+                {loading && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted rounded-lg px-4 py-2.5">
+                      <div className="flex gap-1.5">
+                        <span className="inline-block size-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:0ms]" />
+                        <span className="inline-block size-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:150ms]" />
+                        <span className="inline-block size-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms]" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2 pt-2 border-t">
+                <Input 
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                  placeholder="اكتب إجابتك هنا..."
+                  disabled={loading}
+                  className="flex-1"
+                />
+                <Button onClick={sendMessage} disabled={loading || !chatInput.trim()} size="icon">
+                  <Send className="size-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {step === "final" && refinedData && (
+            <div className="space-y-4">
+              <div className="rounded-lg border p-5 space-y-4 bg-gradient-to-br from-primary/5 to-transparent">
+                <div className="space-y-1 pb-3 border-b">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">اسم المشروع</span>
+                  <p className="text-lg font-semibold">{refinedData.name}</p>
+                </div>
+                
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">الوصف</span>
+                  <p className="text-sm leading-relaxed">{refinedData.description}</p>
+                </div>
+                
+                <div className="grid gap-4 sm:grid-cols-2 pt-2">
+                  <div className="space-y-1.5">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                      📱 Platform
+                    </span>
+                    <p className="text-sm font-medium bg-muted/50 px-3 py-2 rounded-md">{refinedData.platform || "To be determined"}</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                      🛠️ Tech Stack
+                    </span>
+                    <p className="text-xs font-mono bg-muted/50 px-3 py-2 rounded-md leading-relaxed">{refinedData.techStack || "To be determined"}</p>
+                  </div>
+                </div>
+
+                {refinedData.conversationSummary && (
+                  <div className="space-y-1.5 pt-2">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">📝 ملخص المحادثة</span>
+                    <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-md max-h-40 overflow-y-auto space-y-1 leading-relaxed">
+                      {refinedData.conversationSummary.split('\n').map((line, i) => (
+                        <div key={i} className="flex gap-2">
+                          <span className="text-primary">•</span>
+                          <span>{line}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-start gap-2 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border border-blue-200 dark:border-blue-900 p-4">
+                <div className="text-blue-600 dark:text-blue-400 text-lg mt-0.5">✨</div>
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                    جاهز للتوليد!
+                  </p>
+                  <p className="text-xs text-blue-800 dark:text-blue-200">
+                    هنستخدم الذكاء الاصطناعي لتوليد: Requirements، User Stories، Architecture، ERD، Squad Recommendation، Sprint Plan، Risk Analysis، و Cost/Timeline Estimates
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2 rounded-lg bg-muted/50 border p-3">
+                <div className="text-muted-foreground text-sm mt-0.5">💡</div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  بعد التوليد، هتقدر تعدل أي تفاصيل من خلال الـ <strong>AI Assistant</strong> 💬 (User Stories، Requirements، Milestones، Budget، وأكتر)
+                </p>
+              </div>
+            </div>
+          )}
         </div>
+
         <DialogFooter>
-          <Button onClick={submit} disabled={!name.trim() || !idea.trim()}>
-            {t("client.generateBtn")} ⚡
-          </Button>
+          {step === "initial" && (
+            <Button onClick={startChat} disabled={!name.trim() || !idea.trim()}>
+              {t("client.startChat")}
+            </Button>
+          )}
+          {step === "chat" && (
+            <Button variant="outline" onClick={() => setStep("initial")}>
+              {t("client.back")}
+            </Button>
+          )}
+          {step === "final" && (
+            <>
+              <Button variant="outline" onClick={() => setStep("chat")}>
+                {t("client.editAnswers")}
+              </Button>
+              <Button onClick={generateProject}>
+                {t("client.generateBtn")}
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -77,7 +77,15 @@ erDiagram
 \`\`\`
 - The diagram will be automatically rendered as a visual ERD (not just text)
 - Include proper cardinality notation: ||--o{ (one-to-many), }|--|| (many-to-one), ||--|| (one-to-one), }o--o{ (many-to-many)
-- Define entity fields with data types when creating database schemas`;
+- Define entity fields with data types when creating database schemas
+
+EDITING CAPABILITIES:
+When the user asks to modify specific parts of the project (e.g., "edit user story #3", "change the budget estimate", "add a new milestone"):
+1. Acknowledge what they want to change
+2. Show the current value
+3. Ask for the new value or propose changes
+4. Confirm the update
+Example: "I'll update user story #3. Currently it says: '...' - what would you like it to say instead?"`;
   }
 
   const spentPct = Math.round((project.spent / project.budgetHigh) * 100);
@@ -130,6 +138,7 @@ ${tasksText || "  (none yet)"}
 - If asked for advice beyond the data, give best-practice guidance and note it is advisory.
 - Use a friendly, professional tone.
 - Do NOT output markdown headers or bullet-point heavy responses unless explicitly asked for a list.
+- Support both English and Arabic responses based on user's language preference.
 
 IMPORTANT - MERMAID DIAGRAMS:
 When asked to create or analyze database schemas, ERD diagrams, or data models:
@@ -144,7 +153,22 @@ erDiagram
 \`\`\`
 - The diagram will be automatically rendered as a visual ERD (not just text)
 - Include proper cardinality notation: ||--o{ (one-to-many), }|--|| (many-to-one), ||--|| (one-to-one), }o--o{ (many-to-many)
-- Define entity fields with data types when creating database schemas`;
+- Define entity fields with data types when creating database schemas
+
+EDITING & REFINEMENT CAPABILITIES:
+When the user asks to modify specific parts of the project plan (e.g., "عدل user story رقم 3", "change milestone 2 deadline", "add a new requirement"):
+1. Acknowledge what they want to change with specificity
+2. Show the current value clearly
+3. Either propose the change or ask for their input
+4. Provide a clear summary of what was updated
+5. Maintain consistency with the rest of the project plan
+
+Example flows:
+- User: "عدل user story الأولى" → You: "User story #1 currently says: 'As a user, I want to login'. What would you like to change it to?"
+- User: "أضيف milestone جديد" → You: "Sure! What should the new milestone be? (Name, deliverables, and target date)"
+- User: "غير ال budget estimate" → You: "Current budget: $50k-$75k. What's the new estimate range you'd like?"
+
+Always be specific about which item is being modified and confirm changes clearly.`;
 }
 
 export function AiAssistant() {
@@ -154,8 +178,8 @@ export function AiAssistant() {
   const SUGGESTIONS = [
     t("ai.suggested.4"),
     t("ai.suggested.5"),
-    t("ai.suggested.6"),
-    t("ai.suggested.7"),
+    "عدّل user story محددة",
+    "أضيف requirement جديد",
   ];
   const project = getProject(projectId);
 

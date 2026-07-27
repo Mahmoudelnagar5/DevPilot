@@ -58,8 +58,6 @@ try {
     fetch: () => Promise.reject(new Error("Supabase initialization failed")),
   });
 }
-  });
-}
 
 export { supabase };
 export type { User, Session } from "@supabase/supabase-js";

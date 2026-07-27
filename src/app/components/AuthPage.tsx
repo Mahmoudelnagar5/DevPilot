@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, useEffect } from "react";
 import { Layers, Sparkles, Eye, EyeOff, User, Mail, Lock, ChevronRight, Loader2 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useLanguage } from "../LanguageContext";
 import type { Role } from "../data/mock";
+import { getPlatformStats, incrementVisitorCount, formatNumber, formatRevenue, type PlatformStats } from "../lib/analyticsService";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -62,6 +63,29 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  
+  // Platform stats
+  const [stats, setStats] = useState<PlatformStats>({
+    totalProjects: 2,
+    totalUsers: 10,
+    totalRevenue: 0,
+    totalVisitors: 30,
+    lastUpdated: new Date().toISOString(),
+  });
+
+  // Load platform stats on mount
+  useEffect(() => {
+    const loadStats = async () => {
+      const platformStats = await getPlatformStats();
+      setStats(platformStats);
+    };
+    
+    // Increment visitor count
+    incrementVisitorCount();
+    
+    // Load stats
+    loadStats();
+  }, []);
 
   const resetForm = () => {
     setEmail("");
@@ -155,8 +179,8 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
               <Layers className="size-5" />
             </div>
             <div>
-              <div className="text-lg font-bold tracking-tight text-white">DevPilot</div>
-              <div className="text-[11px] text-slate-400 font-mono">AI-Powered Project Delivery</div>
+              <div className="text-lg font-bold tracking-tight text-white">{t("app.title")}</div>
+              <div className="text-[11px] text-slate-400 font-mono">{t("auth.aiPoweredDelivery")}</div>
             </div>
           </div>
 
@@ -164,26 +188,25 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs text-primary">
               <Sparkles className="size-3" />
-              Powered by Groq · Llama 3.3
+              {t("auth.poweredByGroq")}
             </div>
             <h1 className="text-4xl font-bold text-white leading-tight">
-              The AI co-pilot for{" "}
+              {t("auth.heroTitle")}{" "}
               <span className="bg-gradient-to-r from-primary to-violet-400 bg-clip-text text-transparent">
-                software delivery
+                {t("auth.heroTitleHighlight")}
               </span>
             </h1>
             <p className="text-slate-400 text-base leading-relaxed max-w-sm">
-              From intake to deployment — DevPilot orchestrates your entire engineering pipeline with
-              AI-generated plans, human oversight, and a tamper-proof decision ledger.
+              {t("auth.heroDescription")}
             </p>
 
             {/* Feature highlights */}
             <div className="space-y-3 pt-2">
               {[
-                "AI requirements & architecture in seconds",
-                "Automated sprint planning & risk scoring",
-                "Immutable trust ledger for every decision",
-                "Real-time code review & security analysis",
+                t("auth.feature1"),
+                t("auth.feature2"),
+                t("auth.feature3"),
+                t("auth.feature4"),
               ].map((f) => (
                 <div key={f} className="flex items-center gap-2.5 text-sm text-slate-300">
                   <div className="size-1.5 rounded-full bg-primary shrink-0" />
@@ -196,18 +219,18 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
           {/* Social proof */}
           <div className="flex items-center gap-4 border-t border-white/10 pt-6">
             <div className="text-center">
-              <div className="text-2xl font-bold text-white">128+</div>
-              <div className="text-xs text-slate-500">Active Projects</div>
+              <div className="text-2xl font-bold text-white">{stats.totalProjects}+</div>
+              <div className="text-xs text-slate-500">{t("auth.activeProjects")}</div>
             </div>
             <div className="h-8 w-px bg-white/10" />
             <div className="text-center">
-              <div className="text-2xl font-bold text-white">1.5k+</div>
-              <div className="text-xs text-slate-500">Users</div>
+              <div className="text-2xl font-bold text-white">{formatNumber(stats.totalUsers)}+</div>
+              <div className="text-xs text-slate-500">{t("auth.users")}</div>
             </div>
             <div className="h-8 w-px bg-white/10" />
             <div className="text-center">
-              <div className="text-2xl font-bold text-white">$2.4M</div>
-              <div className="text-xs text-slate-500">Managed</div>
+              <div className="text-2xl font-bold text-white">{stats.totalVisitors}+</div>
+              <div className="text-xs text-slate-500">{t("auth.platformVisitors")}</div>
             </div>
           </div>
         </div>
@@ -220,7 +243,7 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
           <div className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
             <Layers className="size-4" />
           </div>
-          <span className="font-bold text-lg">DevPilot</span>
+          <span className="font-bold text-lg">{t("app.title")}</span>
         </div>
 
         <div className="w-full max-w-md">

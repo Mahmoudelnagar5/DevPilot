@@ -4,6 +4,7 @@ import { generateProjectPlan } from "./lib/groq";
 import { fetchProjects, insertProject, patchProject } from "./lib/projectsService";
 import { supabase } from "./lib/supabase";
 import { loadLocalProjects, saveLocalProjects } from "./lib/localProjectsService";
+import { getPlatformStats } from "./lib/analyticsService";
 
 export interface NewProjectInput {
   name: string;
