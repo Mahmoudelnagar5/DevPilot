@@ -476,6 +476,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "auth.noAccount": "Don't have an account?",
     "auth.haveAccount": "Already have an account?",
     "auth.terms": "By continuing, you agree to DevPilot's Terms of Service and Privacy Policy.",
+    "auth.networkError": "Network error: Unable to reach server. Please check your internet connection.",
+    "auth.connectionFailed": "Connection failed. Please check your internet connection and try again.",
 
     // Auth Page - Left Panel
     "auth.aiPoweredDelivery": "AI-Powered Project Delivery",
@@ -977,6 +979,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "auth.noAccount": "ليس لديك حساب؟",
     "auth.haveAccount": "لديك حساب بالفعل؟",
     "auth.terms": "بمتابعتك، فإنك توافق على شروط الخدمة وسياسة الخصوصية الخاصة بـ DevPilot.",
+    "auth.networkError": "خطأ في الاتصال: تعذر الوصول إلى الخادم. تحقق من اتصالك بالإنترنت.",
+    "auth.connectionFailed": "فشل الاتصال. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.",
 
     // Auth Page - Left Panel
     "auth.aiPoweredDelivery": "تسليم المشاريع بالذكاء الاصطناعي",

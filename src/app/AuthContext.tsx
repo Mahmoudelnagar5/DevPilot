@@ -9,6 +9,13 @@ import {
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "./lib/supabase";
 import type { Role } from "./data/mock";
+import { translations } from "./data/translations";
+
+// Simple translation helper for auth errors
+function getErrorMessage(errorKey: string, lang: "en" | "ar" = "ar"): string {
+  const dict = translations[lang];
+  return dict[errorKey] || errorKey;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -53,6 +60,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Get current language from localStorage
+  const getCurrentLang = (): "en" | "ar" => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("devpilot_lang");
+      if (saved === "en" || saved === "ar") return saved;
+    }
+    return "ar"; // Default to Arabic
+  };
 
   // Fetch profile from public.profiles
   const fetchProfile = useCallback(async (uid: string) => {
@@ -113,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fullName: string,
     role: Role
   ): Promise<{ error: string | null; needsEmailConfirmation: boolean }> => {
+    const lang = getCurrentLang();
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -126,7 +143,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       });
 
-      if (error) return { error: error.message, needsEmailConfirmation: false };
+      if (error) {
+        // Better error messages for common issues
+        if (error.message.includes("fetch") || error.message.includes("network") || error.message.includes("Failed to fetch")) {
+          return { error: getErrorMessage("auth.connectionFailed", lang), needsEmailConfirmation: false };
+        }
+        return { error: error.message, needsEmailConfirmation: false };
+      }
 
       // If Supabase returned a session immediately → email confirm is OFF
       // → user is already logged in, navigate to dashboard
@@ -142,7 +165,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // No session → Supabase sent a confirmation email first
       return { error: null, needsEmailConfirmation: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to create account. Check your connection and try again.";
+      console.error("Sign up error:", err);
+      // Handle network errors
+      if (err instanceof TypeError && (err.message.includes("fetch") || err.message.includes("Failed to fetch"))) {
+        return { error: getErrorMessage("auth.networkError", lang), needsEmailConfirmation: false };
+      }
+      const errorMessage = err instanceof Error ? err.message : getErrorMessage("auth.connectionFailed", lang);
       return { error: errorMessage, needsEmailConfirmation: false };
     }
   };
@@ -151,12 +179,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string
   ): Promise<{ error: string | null }> => {
+    const lang = getCurrentLang();
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) return { error: error.message };
+      if (error) {
+        // Better error messages for common issues
+        if (error.message.includes("fetch") || error.message.includes("network") || error.message.includes("Failed to fetch")) {
+          return { error: getErrorMessage("auth.connectionFailed", lang) };
+        }
+        return { error: error.message };
+      }
       return { error: null };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to sign in. Check your connection and credentials.";
+      console.error("Sign in error:", err);
+      // Handle network errors
+      if (err instanceof TypeError && (err.message.includes("fetch") || err.message.includes("Failed to fetch"))) {
+        return { error: getErrorMessage("auth.networkError", lang) };
+      }
+      const errorMessage = err instanceof Error ? err.message : getErrorMessage("auth.connectionFailed", lang);
       return { error: errorMessage };
     }
   };

@@ -114,12 +114,13 @@ function createProjectFromInput(input: NewProjectInput): Project {
 export function AppProvider({ children }: { children: ReactNode }) {
   const [role,            setRoleState]     = useState<Role>("client");
   const [page,            setPage]          = useState<string>(DEFAULT_PAGE.client);
-  const [projectId,       setProjectId]     = useState<string>("p-ledgerloop");
+  const [projectId,       setProjectId]     = useState<string>("");
   const [projects,        setProjects]      = useState<Project[]>(() => {
+    // Load only real projects from localStorage, no seed data
     const local = loadLocalProjects();
-    return local.length > 0 ? local : seedProjects;
+    return local;
   });
-  const [ledger,          setLedger]        = useState<LedgerEntry[]>(seedLedger);
+  const [ledger,          setLedger]        = useState<LedgerEntry[]>([]);
   const [projectsLoading, setProjectsLoading] = useState<boolean>(false);
 
   // Persist projects to localStorage whenever they change
@@ -134,8 +135,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // -------------------------------------------------------------------------
   // On mount (and whenever the auth session changes): load projects from
-  // Supabase. If the user is not logged in or the table doesn't exist yet,
-  // we silently keep the local data.
+  // Supabase. Only show real projects created by users.
   // -------------------------------------------------------------------------
   useEffect(() => {
     let cancelled = false;
@@ -143,13 +143,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async function load() {
       setProjectsLoading(true);
       const rows = await fetchProjects();
-      if (!cancelled && rows.length > 0) {
-        // Merge: remote projects take priority; keep local projects for any id not in remote
-        setProjects((prev) => {
-          const remoteIds = new Set(rows.map((r) => r.id));
-          const localOnly = prev.filter((p) => !remoteIds.has(p.id));
-          return [...rows, ...localOnly];
-        });
+      if (!cancelled) {
+        // Use ONLY remote projects from database
+        setProjects(rows);
       }
       if (!cancelled) setProjectsLoading(false);
     }
