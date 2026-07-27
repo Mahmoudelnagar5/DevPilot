@@ -1,10 +1,8 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from "react";
-import { projects as seedProjects, CURRENT_USER, type Role, type Project } from "./data/mock";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { CURRENT_USER, type Role, type Project } from "./data/mock";
 import { generateProjectPlan } from "./lib/groq";
 import { fetchProjects, insertProject, patchProject } from "./lib/projectsService";
 import { supabase } from "./lib/supabase";
-import { loadLocalProjects, saveLocalProjects } from "./lib/localProjectsService";
-import { getPlatformStats } from "./lib/analyticsService";
 
 export interface NewProjectInput {
   name: string;
@@ -24,28 +22,18 @@ export interface LedgerEntry {
   status: "recorded" | "pending" | "approved" | "rejected";
 }
 
-const seedLedger: LedgerEntry[] = [
-  {
-    id: "led-4", projectId: "p-ledgerloop", category: "milestone", title: "Ledger Engine milestone approved",
-    detail: "Deliverables accepted and $22,000 payment release authorized.", actor: "Nadia Farouk", actorRole: "Client",
-    timestamp: "2026-07-05T09:40:00Z", signature: "SIG-NF-7A21", status: "approved",
-  },
-  {
-    id: "led-3", projectId: "p-ledgerloop", category: "human-edit", title: "Plaid edge cases added to scope",
-    detail: "Lina added pending-to-posted reconciliation handling after reviewing the AI draft.", actor: "Lina Haddad", actorRole: "Technical Manager",
-    timestamp: "2026-05-02T14:18:00Z", signature: "SIG-LH-91CD", status: "recorded",
-  },
-  {
-    id: "led-2", projectId: "p-ledgerloop", category: "approval", title: "Project plan approved",
-    detail: "Nadia approved the reviewed 18-week plan and its $68k-$94k estimate range.", actor: "Nadia Farouk", actorRole: "Client",
-    timestamp: "2026-05-03T10:06:00Z", signature: "SIG-NF-4D82", status: "approved",
-  },
-  {
-    id: "led-1", projectId: "p-ledgerloop", category: "ai-proposal", title: "Initial delivery plan proposed",
-    detail: "Gemini generated requirements, architecture, five sprints, and a confidence-scored estimate.", actor: "DevPilot AI", actorRole: "AI",
-    timestamp: "2026-05-01T08:30:00Z", signature: "AI-HASH-22F8", status: "recorded",
-  },
-];
+export interface LedgerEntry {
+  id: string;
+  projectId: string;
+  category: "ai-proposal" | "human-edit" | "approval" | "scope-change" | "milestone";
+  title: string;
+  detail: string;
+  actor: string;
+  actorRole: "AI" | "Client" | "Technical Manager" | "Developer";
+  timestamp: string;
+  signature: string;
+  status: "recorded" | "pending" | "approved" | "rejected";
+}
 
 interface AppState {
   role: Role;

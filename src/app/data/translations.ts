@@ -400,6 +400,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "ai.suggested.6": "Any risks I should know about?",
     "ai.suggested.7": "When will the project finish?",
     "ai.placeholder2": "Ask about status, cost, risk…",
+    "ai.sendHint": "Enter to send • Shift+Enter for new line",
 
     // Pipeline demo
     "pipeline.idea": "I want an app where people can book home cleaning services and pay online.",
@@ -934,6 +935,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "ai.suggested.6": "هل توجد أي مخاطر يجب أن أعرفها؟",
     "ai.suggested.7": "متى سينتهي المشروع؟",
     "ai.placeholder2": "اسأل عن الحالة، التكلفة، المخاطر…",
+    "ai.sendHint": "Enter للإرسال • Shift+Enter لسطر جديد",
 
     // Auth Page (Arabic)
     "auth.title": "تسجيل الدخول أو إنشاء حساب",

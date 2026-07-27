@@ -12,6 +12,27 @@ interface ChatMsg {
   text: string;
   /** True while we are still streaming the AI reply */
   streaming?: boolean;
+  /** Language direction for this message */
+  dir?: "ltr" | "rtl";
+}
+
+/** Detect if text is primarily Arabic (RTL) or English (LTR) */
+function detectTextDirection(text: string): "ltr" | "rtl" {
+  // Remove whitespace, numbers, and punctuation for better detection
+  const cleanText = text.replace(/[\s\d\p{P}]/gu, '');
+  
+  // Count Arabic characters (Unicode range for Arabic script)
+  const arabicChars = (cleanText.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g) || []).length;
+  // Count Latin characters
+  const latinChars = (cleanText.match(/[a-zA-Z]/g) || []).length;
+  
+  // If there are more Arabic characters, it's RTL
+  // Even if just a few Arabic chars and no Latin, consider it RTL
+  if (arabicChars > latinChars || (arabicChars > 0 && latinChars === 0)) {
+    return "rtl";
+  }
+  
+  return "ltr";
 }
 
 /** Parse message text to detect and extract mermaid code blocks */
@@ -60,7 +81,11 @@ function parseMermaidBlocks(text: string): Array<{ type: "text" | "mermaid"; con
 }
 
 /** Build a detailed system prompt from live project data */
-function buildSystemPrompt(project: Project | undefined): string {
+function buildSystemPrompt(project: Project | undefined, userLanguage: "ar" | "en"): string {
+  const langInstruction = userLanguage === "ar" 
+    ? "\n\n🔴 CRITICAL - LANGUAGE MATCHING (MUST FOLLOW):\n- The user wrote to you in ARABIC (العربية)\n- You MUST respond ONLY in ARABIC (العربية)\n- Do NOT use English in your response\n- Use RTL text direction for Arabic\n- يجب الرد بالعربية فقط لأن المستخدم كتب بالعربية"
+    : "\n\n🔴 CRITICAL - LANGUAGE MATCHING (MUST FOLLOW):\n- The user wrote to you in ENGLISH\n- You MUST respond ONLY in ENGLISH\n- Do NOT use Arabic in your response\n- Use LTR text direction for English\n- Match the user's English language exactly";
+
   if (!project) {
     return `You are DevPilot AI, an expert technical project management assistant.
 Answer questions concisely and helpfully. If no project is selected, let the user know.
@@ -85,7 +110,7 @@ When the user asks to modify specific parts of the project (e.g., "edit user sto
 2. Show the current value
 3. Ask for the new value or propose changes
 4. Confirm the update
-Example: "I'll update user story #3. Currently it says: '...' - what would you like it to say instead?"`;
+Example: "I'll update user story #3. Currently it says: '...' - what would you like it to say instead?"${langInstruction}`;
   }
 
   const spentPct = Math.round((project.spent / project.budgetHigh) * 100);
@@ -138,7 +163,14 @@ ${tasksText || "  (none yet)"}
 - If asked for advice beyond the data, give best-practice guidance and note it is advisory.
 - Use a friendly, professional tone.
 - Do NOT output markdown headers or bullet-point heavy responses unless explicitly asked for a list.
-- Support both English and Arabic responses based on user's language preference.
+
+🔴 CRITICAL - LANGUAGE MATCHING (MUST FOLLOW):
+- ALWAYS respond in the EXACT SAME LANGUAGE as the user's current message
+- If the user writes in ENGLISH → respond ONLY in ENGLISH
+- If the user writes in ARABIC (العربية) → respond ONLY in ARABIC (العربية)  
+- Do NOT mix languages in your response
+- Each message should match the language of the user's input for that specific message
+- This is a STRICT requirement - language mismatch is not acceptable
 
 IMPORTANT - MERMAID DIAGRAMS:
 When asked to create or analyze database schemas, ERD diagrams, or data models:
@@ -186,10 +218,16 @@ export function AiAssistant() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  // Initialize with greeting (direction will be detected from translation)
+  const greetingText = t("ai.greeting");
+  const greetingDir = detectTextDirection(greetingText);
+  
   const [msgs, setMsgs] = useState<ChatMsg[]>([
     {
       role: "ai",
-      text: t("ai.greeting"),
+      text: greetingText,
+      dir: greetingDir,
     },
   ]);
 
@@ -207,14 +245,18 @@ export function AiAssistant() {
     setInput("");
     setLoading(true);
 
-    // Add user message immediately
-    const userMsg: ChatMsg = { role: "user", text };
+    // Detect language direction from user message
+    const userDir = detectTextDirection(text);
+    const userLang = userDir === "rtl" ? "ar" : "en";
+
+    // Add user message immediately with detected direction
+    const userMsg: ChatMsg = { role: "user", text, dir: userDir };
     setMsgs((prev) => [...prev, userMsg]);
 
     // Build Groq history
     const userGroqMsg: GroqMessage = { role: "user", content: text };
     const messages: GroqMessage[] = [
-      { role: "system", content: buildSystemPrompt(project) },
+      { role: "system", content: buildSystemPrompt(project, userLang) },
       ...historyRef.current,
       userGroqMsg,
     ];
@@ -226,6 +268,8 @@ export function AiAssistant() {
       let accumulated = "";
       await groqChatStream(messages, (chunk) => {
         accumulated += chunk;
+        // Detect AI response direction dynamically as it streams
+        const aiDir = detectTextDirection(accumulated);
         setMsgs((prev) => {
           const updated = [...prev];
           // Replace the last message (streaming placeholder)
@@ -233,15 +277,17 @@ export function AiAssistant() {
             role: "ai",
             text: accumulated,
             streaming: true,
+            dir: aiDir,
           };
           return updated;
         });
       });
 
       // Finalize: mark as done and commit to history
+      const finalDir = detectTextDirection(accumulated);
       setMsgs((prev) => {
         const updated = [...prev];
-        updated[updated.length - 1] = { role: "ai", text: accumulated };
+        updated[updated.length - 1] = { role: "ai", text: accumulated, dir: finalDir };
         return updated;
       });
 
@@ -258,6 +304,7 @@ export function AiAssistant() {
         updated[updated.length - 1] = {
           role: "ai",
           text: `⚠️ ${errorText}`,
+          dir: "ltr",
         };
         return updated;
       });
@@ -310,18 +357,24 @@ export function AiAssistant() {
               >
                 <div
                   className={cn(
-                    "max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed",
+                    "max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed break-words",
                     m.role === "user"
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-foreground",
                   )}
+                  dir={m.dir || "ltr"}
+                  style={{ 
+                    textAlign: m.dir === "rtl" ? "right" : "left",
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                  }}
                 >
                   {m.role === "ai" ? (
                     <>
                       {parseMermaidBlocks(m.text).map((block, blockIdx) => (
-                        <div key={blockIdx}>
+                        <div key={blockIdx} className="break-words">
                           {block.type === "text" ? (
-                            <div className="whitespace-pre-wrap">{block.content}</div>
+                            <div className="whitespace-pre-wrap break-words">{block.content}</div>
                           ) : (
                             <MermaidRenderer chart={block.content} />
                           )}
@@ -329,7 +382,7 @@ export function AiAssistant() {
                       ))}
                     </>
                   ) : (
-                    <div className="whitespace-pre-wrap">{m.text}</div>
+                    <div className="whitespace-pre-wrap break-words">{m.text}</div>
                   )}
                   {m.streaming && m.text === "" && (
                     <span className="flex items-center gap-1 text-muted-foreground">
@@ -365,32 +418,55 @@ export function AiAssistant() {
           </div>
 
           {/* Input */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              send(input);
-            }}
-            className="flex items-center gap-2 border-t border-border p-3"
-          >
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={t("ai.placeholder2")}
-              disabled={loading}
-              className="flex-1 rounded-md border border-border bg-input-background px-3 py-2 text-sm outline-none focus:border-primary/50 disabled:opacity-60"
-            />
-            <button
-              type="submit"
-              disabled={loading || !input.trim()}
-              className="grid size-9 place-items-center rounded-md bg-primary text-primary-foreground disabled:opacity-50"
+          <div className="border-t border-border">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                send(input);
+              }}
+              className="flex items-end gap-2 p-3"
             >
-              {loading ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Send className="size-4" />
-              )}
-            </button>
-          </form>
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  // Send on Enter (without Shift)
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    send(input);
+                  }
+                }}
+                placeholder={t("ai.placeholder2")}
+                disabled={loading}
+                rows={1}
+                className="flex-1 rounded-md border border-border bg-input-background px-3 py-2 text-sm outline-none focus:border-primary/50 disabled:opacity-60 resize-none min-h-[2.5rem] max-h-32 overflow-y-auto"
+                style={{
+                  height: "auto",
+                  minHeight: "2.5rem",
+                }}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = "auto";
+                  target.style.height = Math.min(target.scrollHeight, 128) + "px";
+                }}
+              />
+              <button
+                type="submit"
+                disabled={loading || !input.trim()}
+                className="grid size-9 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground disabled:opacity-50 hover:bg-primary/90 transition-colors"
+                title={loading ? "" : "Send (Enter) • New line (Shift+Enter)"}
+              >
+                {loading ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Send className="size-4" />
+                )}
+              </button>
+            </form>
+            <div className="px-3 pb-2 text-[10px] text-muted-foreground text-center">
+              {t("ai.sendHint") || "Enter to send • Shift+Enter for new line"}
+            </div>
+          </div>
         </div>
       )}
     </>

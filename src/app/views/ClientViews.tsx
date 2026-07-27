@@ -31,6 +31,18 @@ import { Textarea } from "../components/ui/textarea";
 import { Input } from "../components/ui/input";
 import { toast } from "sonner";
 
+/**
+ * Detect whether a string is primarily Arabic/RTL or Latin/LTR.
+ * Strips digits, spaces and punctuation, then counts Arabic vs Latin letters.
+ */
+function detectTextLanguage(text: string): "ar" | "en" {
+  const cleaned = text.replace(/[\d\s\p{P}]/gu, "");
+  const arabicCount = (cleaned.match(/[\u0600-\u06FF]/g) || []).length;
+  const latinCount = (cleaned.match(/[a-zA-Z]/g) || []).length;
+  // If any Arabic letters are present consider the message Arabic/RTL by default
+  return arabicCount >= latinCount ? "ar" : "en";
+}
+
 export function ClientViews() {
   const { page } = useApp();
   switch (page) {
@@ -170,12 +182,14 @@ function NewProjectDialog() {
 
   const startChat = () => {
     if (!name.trim() || !idea.trim()) return;
+    const lang = detectTextLanguage(name + " " + idea);
     setStep("chat");
-    // Initial AI message
-    setChatMessages([{
-      role: "ai",
-      text: `شكراً! عشان أفهم فكرتك أحسن و أطلع requirements دقيقة، عندي شوية أسئلة:\n\n1️⃣ أنت محتاج تطبيق إيه؟\n   • تطبيق ويب (Web Application)\n   • تطبيق موبايل (iOS/Android)\n   • تطبيق ديسكتوب\n   • أكتر من واحد من دول\n\n2️⃣ عندك تكنولوجي معينة تحب تستخدمها؟ (مثلاً: React، Vue، Node.js، Python، إلخ)\nلو مش عارف، قولي و أنا هقترح عليك الأنسب! 👍`
-    }]);
+
+    const intro = lang === "ar"
+      ? `شكراً! عشان أفهم فكرتك أحسن و أطلع requirements دقيقة، عندي شوية أسئلة:\n\n1️⃣ أنت محتاج تطبيق إيه؟\n   • تطبيق ويب (Web Application)\n   • تطبيق موبايل (iOS/Android)\n   • تطبيق ديسكتوب\n   • أكتر من واحد من دول\n\n2️⃣ عندك تكنولوجي معينة تحب تستخدمها؟ (مثلاً: React، Vue، Node.js، Python، إلخ)\nلو مش عارف، قولي و أنا هقترح عليك الأنسب! 👍`
+      : `Thanks! To better understand your idea and extract accurate requirements, I have a few questions:\n\n1️⃣ What kind of app do you need?\n   • Web Application\n   • Mobile App (iOS/Android)\n   • Desktop App\n   • More than one of these\n\n2️⃣ Do you have a preferred technology stack? (e.g. React, Vue, Node.js, Python, etc.)\nIf unsure, let me know and I’ll recommend the best fit! 👍`;
+
+    setChatMessages([{ role: "ai", text: intro }]);
   };
 
   const sendMessage = async () => {
@@ -193,9 +207,13 @@ function NewProjectDialog() {
         content: m.text
       }));
 
+      // Match system language to the user's message language
+      const lang = detectTextLanguage(userMessage);
+
       // Add system context
-      const systemPrompt = `أنت مساعد ذكي متخصص في تحليل وتوضيح أفكار المشاريع التقنية.
-      
+      const systemPrompt = lang === "ar"
+        ? `أنت مساعد ذكي متخصص في تحليل وتوضيح أفكار المشاريع التقنية.
+
 معلومات المشروع الحالية:
 - اسم المشروع: ${name}
 - الوصف الأولي: ${idea}
@@ -209,7 +227,25 @@ function NewProjectDialog() {
 قواعد:
 - إذا جمعت معلومات كافية عن (Platform + Tech Stack + User Types + Core Features)، قل: "✅ REFINEMENT_COMPLETE" في بداية ردك
 - لا تطرح أكثر من سؤالين في المرة الواحدة
-- كن محدداً في أسئلتك`;
+- كن محدداً في أسئلتك
+- 🔴 CRITICAL: الرد يجب أن يكون باللغة العربية فقط. لا تخلط اللغات. لا تستخدم الإنجليزية إلا في المصطلحات التقنية الضرورية.`
+        : `You are an intelligent assistant specialized in analyzing and clarifying technical project ideas.
+
+Current project information:
+- Project Name: ${name}
+- Initial Description: ${idea}
+
+Your task:
+1. Ask specific clarifying questions to better understand the idea (Platform, Technology Stack, User Types, Core Features, Timeline, Budget)
+2. After 3-4 exchanges, gather all information and tell me the clarification is complete
+3. Use English naturally and in a friendly tone
+4. Focus on collecting specific and practical information
+
+Rules:
+- If you have gathered enough information about (Platform + Tech Stack + User Types + Core Features), say "✅ REFINEMENT_COMPLETE" at the beginning of your response
+- Ask no more than two questions at a time
+- Be specific in your questions
+- 🔴 CRITICAL: You MUST reply in English only. Do not mix languages. Use Arabic only for necessary technical terms.`;
 
       const messages = [
         { role: "system" as const, content: systemPrompt },
@@ -369,7 +405,13 @@ ${refinedData.conversationSummary || 'No additional details'}`;
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-foreground"
                       }`}>
-                      <div className="whitespace-pre-wrap leading-relaxed">{msg.text.replace("✅ REFINEMENT_COMPLETE", "").trim()}</div>
+                      <div
+                        className="whitespace-pre-wrap break-words leading-relaxed"
+                        dir="auto"
+                        style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
+                      >
+                        {msg.text.replace("✅ REFINEMENT_COMPLETE", "").trim()}
+                      </div>
                     </div>
                   </div>
                 ))}

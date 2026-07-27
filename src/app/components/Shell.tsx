@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import {
   LayoutDashboard, FolderKanban, CheckSquare, Receipt, MessageSquare, Users,
   Bell, Search, KanbanSquare, Clock, GitPullRequest, UserCircle, ListChecks,
-  BarChart3, ShieldCheck, CreditCard, LifeBuoy, Layers, ChevronDown, Sparkles,
+  BarChart3, ShieldCheck, CreditCard, LifeBuoy, Layers, Sparkles,
   Menu, X, ScrollText, Presentation, Globe, LogOut,
 } from "lucide-react";
 import { cn } from "./ui/utils";
@@ -10,10 +10,6 @@ import { useApp, DEFAULT_PAGE } from "../AppContext";
 import { useAuth } from "../AuthContext";
 import { useLanguage } from "../LanguageContext";
 import { CURRENT_USER, notifications, type Role } from "../data/mock";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
-  DropdownMenuSeparator, DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "./ui/popover";
@@ -59,16 +55,18 @@ const NAV: Record<Role, NavItem[]> = {
 };
 
 export function Shell({ children }: { children: ReactNode }) {
-  const { role, setRole, page, setPage } = useApp();
+  const { page, setPage } = useApp();
   const { profile, user: authUser, signOut } = useAuth();
   const { lang, toggleLang, t } = useLanguage();
   const [notifOpen, setNotifOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const mockUser = CURRENT_USER[role];
+
+  // Use real profile role, fallback to 'client'
+  const currentRole = (profile?.role || "client") as Role;
+  const mockUser = CURRENT_USER[currentRole];
 
   // Prefer real authenticated profile/metadata, fallback to email or mock
   const realName = profile?.full_name || (authUser?.user_metadata?.full_name as string) || authUser?.email?.split("@")[0];
-  const currentRole = (profile?.role || authUser?.user_metadata?.role || role) as Role;
   const roleTitleMap: Record<Role, string> = {
     client: "Client",
     developer: "Developer",
@@ -81,7 +79,7 @@ export function Shell({ children }: { children: ReactNode }) {
     title: roleTitleMap[currentRole] || mockUser.title,
     avatar: profile?.avatar_url ?? (authUser ? `https://i.pravatar.cc/120?u=${authUser.id}` : mockUser.avatar),
   };
-  const nav = NAV[role];
+  const nav = NAV[currentRole];  // Use currentRole for navigation
   const unread = notifications.filter((n) => n.unread).length;
   const isRTL = lang === "ar";
 
@@ -133,7 +131,7 @@ export function Shell({ children }: { children: ReactNode }) {
 
         <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
           {nav.map((item) => {
-            const active = page === item.key || (item.key === DEFAULT_PAGE[role] && page === "project" && false);
+            const active = page === item.key || (item.key === DEFAULT_PAGE[currentRole] && page === "project" && false);
             return (
               <button
                 key={item.key}
@@ -198,27 +196,13 @@ export function Shell({ children }: { children: ReactNode }) {
             <span>{isRTL ? "English" : "العربيّة"}</span>
           </button>
 
-          {/* Role switcher */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-card px-2 py-2 text-sm hover:border-primary/40 sm:px-3">
-                <span className="hidden text-muted-foreground text-xs font-mono sm:inline">
-                  {t("shell.viewAs")}
-                </span>
-                <span className="max-w-[7rem] truncate font-medium sm:max-w-none">{t(`role.${role}`)}</span>
-                <ChevronDown className="size-4 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t("role.switch")}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {(["client", "developer", "tm", "admin"] as Role[]).map((r) => (
-                <DropdownMenuItem key={r} onClick={() => setRole(r)}>
-                  {t(`role.${r}`)}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Role display (showing real profile role, not switchable) */}
+          <div className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-card px-2 py-2 text-sm sm:px-3">
+            <span className="hidden text-muted-foreground text-xs font-mono sm:inline">
+              {t("shell.viewAs")}
+            </span>
+            <span className="max-w-[7rem] truncate font-medium sm:max-w-none">{t(`role.${currentRole}`)}</span>
+          </div>
 
           {/* Notifications */}
           <Popover open={notifOpen} onOpenChange={setNotifOpen}>
@@ -298,8 +282,8 @@ export function Shell({ children }: { children: ReactNode }) {
         <main className="min-w-0 flex-1 overflow-y-auto">{children}</main>
       </div>
 
-      {/* Global AI assistant (Client + TM) */}
-      {(role === "client" || role === "tm") && <AiAssistant />}
+      {/* Global AI assistant (Client + TM only) */}
+      {(currentRole === "client" || currentRole === "tm") && <AiAssistant />}
     </div>
   );
 }
