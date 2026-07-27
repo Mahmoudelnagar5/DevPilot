@@ -107,42 +107,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fullName: string,
     role: Role
   ): Promise<{ error: string | null; needsEmailConfirmation: boolean }> => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/app` : undefined,
-        data: {
-          full_name: fullName,
-          role,
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/app` : undefined,
+          data: {
+            full_name: fullName,
+            role,
+          },
         },
-      },
-    });
+      });
 
-    if (error) return { error: error.message, needsEmailConfirmation: false };
+      if (error) return { error: error.message, needsEmailConfirmation: false };
 
-    // If Supabase returned a session immediately → email confirm is OFF
-    // → user is already logged in, navigate to dashboard
-    if (data.session) {
-      setSession(data.session);
-      setUser(data.session.user);
-      if (data.session.user) {
-        await fetchProfile(data.session.user.id);
+      // If Supabase returned a session immediately → email confirm is OFF
+      // → user is already logged in, navigate to dashboard
+      if (data.session) {
+        setSession(data.session);
+        setUser(data.session.user);
+        if (data.session.user) {
+          await fetchProfile(data.session.user.id);
+        }
+        return { error: null, needsEmailConfirmation: false };
       }
-      return { error: null, needsEmailConfirmation: false };
-    }
 
-    // No session → Supabase sent a confirmation email first
-    return { error: null, needsEmailConfirmation: true };
+      // No session → Supabase sent a confirmation email first
+      return { error: null, needsEmailConfirmation: true };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to create account. Check your connection and try again.";
+      return { error: errorMessage, needsEmailConfirmation: false };
+    }
   };
 
   const signIn = async (
     email: string,
     password: string
   ): Promise<{ error: string | null }> => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: error.message };
-    return { error: null };
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return { error: error.message };
+      return { error: null };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to sign in. Check your connection and credentials.";
+      return { error: errorMessage };
+    }
   };
 
   const signOut = async () => {

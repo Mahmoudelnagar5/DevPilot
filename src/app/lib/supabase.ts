@@ -19,14 +19,31 @@ try {
         autoRefreshToken: true,
         detectSessionInUrl: true,
       },
+      fetch: (url, options = {}) => {
+        console.warn(`[Fallback Mode] Attempted fetch: ${url}`);
+        return Promise.reject(new Error("Supabase not configured. Set environment variables on Vercel."));
+      },
     });
   } else {
+    // Use platform-specific fetch with CORS headers
+    const platformFetch = (url: string, options?: RequestInit) => {
+      // Add CORS headers for cross-origin requests
+      const headers = {
+        ...((options?.headers || {}) as Record<string, string>),
+      };
+      return fetch(url, {
+        ...options,
+        headers,
+      });
+    };
+
     supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
       },
+      fetch: platformFetch,
     });
   }
 } catch (error) {
@@ -38,6 +55,9 @@ try {
       autoRefreshToken: true,
       detectSessionInUrl: true,
     },
+    fetch: () => Promise.reject(new Error("Supabase initialization failed")),
+  });
+}
   });
 }
 

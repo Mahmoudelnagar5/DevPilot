@@ -237,7 +237,7 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {m === "signin" ? "Sign In" : "Create Account"}
+                {m === "signin" ? t("auth.signIn") : t("auth.signUp")}
               </button>
             ))}
           </div>
@@ -245,12 +245,12 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
           {/* Heading */}
           <div className="mb-6">
             <h2 className="text-2xl font-bold">
-              {mode === "signin" ? "Welcome back" : "Get started today"}
+              {mode === "signin" ? t("auth.welcomeBack") : t("auth.getStarted")}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {mode === "signin"
-                ? "Sign in to your DevPilot account"
-                : "Create your DevPilot account in seconds"}
+                ? t("auth.signInSubtitle")
+                : t("auth.signUpSubtitle")}
             </p>
           </div>
 
@@ -273,14 +273,14 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
             {mode === "signup" && (
               <div className="space-y-1.5">
                 <label className="text-sm font-medium" htmlFor="full-name">
-                  Full name
+                  {t("auth.fullName")}
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                   <input
                     id="full-name"
                     type="text"
-                    placeholder="Nadia Farouk"
+                    placeholder={t("auth.fullNamePlaceholder")}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="w-full rounded-lg border border-border bg-muted/30 pl-10 pr-4 py-2.5 text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-all"
@@ -293,14 +293,14 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
             {/* Email */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium" htmlFor="email">
-                Email address
+                {t("auth.email")}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <input
                   id="email"
                   type="email"
-                  placeholder="you@company.com"
+                  placeholder={t("auth.emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full rounded-lg border border-border bg-muted/30 pl-10 pr-4 py-2.5 text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-all"
@@ -313,14 +313,14 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
             {/* Password */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium" htmlFor="password">
-                Password
+                {t("auth.password")}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder={mode === "signup" ? "Min. 8 characters" : "Your password"}
+                  placeholder={mode === "signup" ? t("auth.passwordPlaceholderSignup") : t("auth.passwordPlaceholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-lg border border-border bg-muted/30 pl-10 pr-10 py-2.5 text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-all"
@@ -342,14 +342,14 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
             {mode === "signup" && (
               <div className="space-y-1.5">
                 <label className="text-sm font-medium" htmlFor="confirm-password">
-                  Confirm password
+                  {t("auth.confirmPassword")}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                   <input
                     id="confirm-password"
                     type={showConfirm ? "text" : "password"}
-                    placeholder="Repeat your password"
+                    placeholder={t("auth.confirmPasswordPlaceholder")}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full rounded-lg border border-border bg-muted/30 pl-10 pr-10 py-2.5 text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-all"
@@ -370,7 +370,7 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
             {/* Role selector (signup only) */}
             {mode === "signup" && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Your role</label>
+                <label className="text-sm font-medium">{t("auth.yourRole")}</label>
                 <div className="grid grid-cols-2 gap-2">
                   {ROLES.map((r) => (
                     <button
@@ -397,7 +397,7 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
                   ))}
                 </div>
                 <p className="text-[11px] text-muted-foreground px-1">
-                  {selectedRoleConfig.icon} You're signing up as{" "}
+                  {selectedRoleConfig.icon} {t("auth.signingUpAs")}{" "}
                   <strong>{selectedRoleConfig.label}</strong> — {selectedRoleConfig.description}.
                 </p>
               </div>
@@ -412,11 +412,11 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
               {loading ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  {mode === "signin" ? "Signing in…" : "Creating account…"}
+                  {mode === "signin" ? t("auth.signingIn") : t("auth.creatingAccount")}
                 </>
               ) : (
                 <>
-                  {mode === "signin" ? "Sign in" : "Create account"}
+                  {mode === "signin" ? t("auth.signIn") : t("auth.signUp")}
                   <ChevronRight className="size-4" />
                 </>
               )}
@@ -425,18 +425,18 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
 
           {/* Switch mode link */}
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            {mode === "signin" ? "Don't have an account?" : "Already have an account?"}{" "}
+            {mode === "signin" ? t("auth.noAccount") : t("auth.haveAccount")}{" "}
             <button
               type="button"
               onClick={() => switchMode(mode === "signin" ? "signup" : "signin")}
               className="font-medium text-primary hover:underline"
             >
-              {mode === "signin" ? "Sign up" : "Sign in"}
+              {mode === "signin" ? t("auth.signUp") : t("auth.signIn")}
             </button>
           </p>
 
           <p className="mt-4 text-center text-[11px] text-muted-foreground">
-            By continuing, you agree to DevPilot's Terms of Service and Privacy Policy.
+            {t("auth.terms")}
           </p>
         </div>
       </div>
