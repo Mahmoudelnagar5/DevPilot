@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "check-env": "node check-env.mjs",
+    "test-supabase": "node test-supabase.mjs",
+    "test-projects": "node test-projects-crud.mjs",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

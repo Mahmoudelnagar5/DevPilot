@@ -115,27 +115,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [role,            setRoleState]     = useState<Role>("client");
   const [page,            setPage]          = useState<string>(DEFAULT_PAGE.client);
   const [projectId,       setProjectId]     = useState<string>("");
-  const [projects,        setProjects]      = useState<Project[]>(() => {
-    // Load only real projects from localStorage, no seed data
-    const local = loadLocalProjects();
-    return local;
-  });
+  const [projects,        setProjects]      = useState<Project[]>([]);  // ← ابدأ بقائمة فارغة
   const [ledger,          setLedger]        = useState<LedgerEntry[]>([]);
-  const [projectsLoading, setProjectsLoading] = useState<boolean>(false);
+  const [projectsLoading, setProjectsLoading] = useState<boolean>(true);  // ← ابدأ بـ true
 
-  // Persist projects to localStorage whenever they change
-  const isInitialRender = useRef(true);
-  useEffect(() => {
-    if (isInitialRender.current) {
-      isInitialRender.current = false;
-      return;
-    }
-    saveLocalProjects(projects);
-  }, [projects]);
+  // ✅ لا نحتاج localStorage persistence - Supabase هو المصدر الوحيد
+  // Remove localStorage sync completely - we rely on Supabase only
 
   // -------------------------------------------------------------------------
-  // On mount (and whenever the auth session changes): load projects from
-  // Supabase. Only show real projects created by users.
+  // ✅ Load projects from Supabase on mount and auth changes
+  // This ensures users always see their saved projects after login
   // -------------------------------------------------------------------------
   useEffect(() => {
     let cancelled = false;
@@ -144,7 +133,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setProjectsLoading(true);
       const rows = await fetchProjects();
       if (!cancelled) {
-        // Use ONLY remote projects from database
+        // ✅ Use ONLY Supabase data - single source of truth
         setProjects(rows);
       }
       if (!cancelled) setProjectsLoading(false);
