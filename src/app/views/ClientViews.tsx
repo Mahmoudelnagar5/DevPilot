@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../AppContext";
+import { useAuth } from "../AuthContext";
 import { useLanguage } from "../LanguageContext";
 import {
   personById, messages, CURRENT_USER, type Project,
@@ -45,15 +46,21 @@ export function ClientViews() {
 function ClientDashboard() {
   const { t } = useLanguage();
   const { openProject, projects } = useApp();
+  const { profile, user: authUser } = useAuth();
   const avgHealth = projects.length ? Math.round(projects.reduce((s, p) => s + p.health, 0) / projects.length) : 0;
   const committed = projects.reduce((s, p) => s + p.budgetHigh, 0);
   const spent = projects.reduce((s, p) => s + p.spent, 0);
   const inExecution = projects.filter((p) => p.status === "in-progress").length;
   const awaiting = projects.filter((p) => p.status === "tm-review" || p.status === "client-approval").length;
+  
+  // Get user name from profile or auth metadata
+  const userName = profile?.full_name || (authUser?.user_metadata?.full_name as string) || authUser?.email?.split("@")[0] || "User";
+  const greeting = t("client.welcome").replace("Nadia", userName);
+  
   return (
     <div className="p-4 sm:p-6">
       <PageHeader
-        title={t("client.welcome")}
+        title={greeting}
         subtitle={t("client.welcomeSub")}
         action={<NewProjectDialog />}
       />

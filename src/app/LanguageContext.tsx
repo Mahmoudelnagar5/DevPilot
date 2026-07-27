@@ -19,7 +19,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       const saved = localStorage.getItem(STORAGE_KEY) as Language;
       if (saved === "en" || saved === "ar") return saved;
     }
-    return "en";
+    return "ar"; // Default to Arabic
   });
 
   const dir = lang === "ar" ? "rtl" : "ltr";

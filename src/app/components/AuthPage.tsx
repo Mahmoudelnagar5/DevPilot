@@ -1,40 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Layers, Sparkles, Eye, EyeOff, User, Mail, Lock, ChevronRight, Loader2 } from "lucide-react";
 import { useAuth } from "../AuthContext";
+import { useLanguage } from "../LanguageContext";
 import type { Role } from "../data/mock";
-
-// ─── Role Config ─────────────────────────────────────────────────────────────
-
-const ROLES: { value: Role; label: string; description: string; color: string; icon: string }[] = [
-  {
-    value: "client",
-    label: "Client",
-    description: "Submit projects and track delivery progress",
-    color: "from-blue-500 to-cyan-500",
-    icon: "💼",
-  },
-  {
-    value: "developer",
-    label: "Developer",
-    description: "Manage tasks, log time and submit code reviews",
-    color: "from-violet-500 to-purple-500",
-    icon: "💻",
-  },
-  {
-    value: "tm",
-    label: "Technical Manager",
-    description: "Review AI plans, assign developers and oversee delivery",
-    color: "from-amber-500 to-orange-500",
-    icon: "🎯",
-  },
-  {
-    value: "admin",
-    label: "Platform Admin",
-    description: "Manage users, monitor analytics and platform health",
-    color: "from-rose-500 to-pink-500",
-    icon: "⚙️",
-  },
-];
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -46,7 +14,40 @@ interface AuthPageProps {
 
 export function AuthPage({ onAuthenticated }: AuthPageProps) {
   const { signIn, signUp } = useAuth();
+  const { t } = useLanguage();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+
+  // Localized roles
+  const ROLES: { value: Role; label: string; description: string; color: string; icon: string }[] = [
+    {
+      value: "client",
+      label: t("auth.clientRole"),
+      description: t("auth.clientDesc"),
+      color: "from-blue-500 to-cyan-500",
+      icon: "💼",
+    },
+    {
+      value: "developer",
+      label: t("auth.developerRole"),
+      description: t("auth.developerDesc"),
+      color: "from-violet-500 to-purple-500",
+      icon: "💻",
+    },
+    {
+      value: "tm",
+      label: t("auth.tmRole"),
+      description: t("auth.tmDesc"),
+      color: "from-amber-500 to-orange-500",
+      icon: "🎯",
+    },
+    {
+      value: "admin",
+      label: t("auth.adminRole"),
+      description: t("auth.adminDesc"),
+      color: "from-rose-500 to-pink-500",
+      icon: "⚙️",
+    },
+  ];
 
   // Form state
   const [email, setEmail] = useState("");
@@ -83,21 +84,21 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
     setSuccessMsg(null);
 
     if (!email || !password) {
-      setError("Please fill in all required fields.");
+      setError(t("auth.fillAllFields"));
       return;
     }
 
     if (mode === "signup") {
       if (!fullName.trim()) {
-        setError("Please enter your full name.");
+        setError(t("auth.enterFullName"));
         return;
       }
       if (password !== confirmPassword) {
-        setError("Passwords do not match.");
+        setError(t("auth.passwordMismatch"));
         return;
       }
       if (password.length < 8) {
-        setError("Password must be at least 8 characters.");
+        setError(t("auth.passwordShort"));
         return;
       }
     }
@@ -118,9 +119,7 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
       } else if (!needsEmailConfirmation) {
         onAuthenticated();
       } else {
-        setSuccessMsg(
-          "Account created! Check your email to confirm your address, then sign in."
-        );
+        setSuccessMsg(t("auth.success"));
         setTimeout(() => switchMode("signin"), 3000);
       }
     }
