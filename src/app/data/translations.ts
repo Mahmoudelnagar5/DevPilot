@@ -274,6 +274,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "common.discard": "Discard",
     "common.approve": "Approve",
     "common.reject": "Reject",
+    "common.cancel": "Cancel",
 
     // Client extra
     "client.welcome": "Welcome back",
@@ -490,6 +491,27 @@ export const translations: Record<Language, Record<string, string>> = {
     "auth.users": "Users",
     "auth.managed": "Managed",
     "auth.platformVisitors": "Platform Visitors",
+    
+    // Reviews
+    "review.submitTitle": "Rate Your Experience",
+    "review.submitDesc": "Share your feedback about DevPilot platform",
+    "review.updateTitle": "Update Your Review",
+    "review.updateDesc": "Edit your previous review and rating",
+    "review.rating": "Your Rating",
+    "review.outOf5": "out of 5",
+    "review.yourReview": "Your Review",
+    "review.placeholder": "Tell us about your experience with DevPilot... What did you like? What could be improved?",
+    "review.characters": "characters",
+    "review.relatedProject": "Related Project",
+    "review.optional": "optional",
+    "review.selectProject": "Select a project...",
+    "review.submit": "Submit Review",
+    "review.update": "Update Review",
+    "review.submitting": "Submitting...",
+    "review.leaveReview": "Leave a Review",
+    "review.viewReviews": "View Reviews",
+    "review.averageRating": "Average Rating",
+    "review.totalReviews": "Total Reviews",
   },
   ar: {
     // General & Header
@@ -784,6 +806,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "common.discard": "تجاهل",
     "common.approve": "اعتماد",
     "common.reject": "رفض",
+    "common.cancel": "إلغاء",
 
     // Client extra
     "client.welcome": "مرحباً بعودتك",
@@ -969,6 +992,27 @@ export const translations: Record<Language, Record<string, string>> = {
     "auth.users": "المستخدمون",
     "auth.managed": "القيمة المُدارة",
     "auth.platformVisitors": "زوار المنصة",
+
+    // Reviews
+    "review.submitTitle": "قيّم تجربتك",
+    "review.submitDesc": "شارك رأيك حول منصة DevPilot",
+    "review.updateTitle": "تحديث تقييمك",
+    "review.updateDesc": "عدّل تقييمك السابق",
+    "review.rating": "التقييم",
+    "review.outOf5": "من 5",
+    "review.yourReview": "مراجعتك",
+    "review.placeholder": "أخبرنا عن تجربتك مع DevPilot... ما الذي أعجبك؟ ما الذي يمكن تحسينه؟",
+    "review.characters": "حرف",
+    "review.relatedProject": "المشروع المرتبط",
+    "review.optional": "اختياري",
+    "review.selectProject": "اختر مشروع...",
+    "review.submit": "إرسال التقييم",
+    "review.update": "تحديث التقييم",
+    "review.submitting": "جاري الإرسال...",
+    "review.leaveReview": "اترك تقييم",
+    "review.viewReviews": "عرض التقييمات",
+    "review.averageRating": "متوسط التقييم",
+    "review.totalReviews": "إجمالي التقييمات",
 
     // Pipeline demo
     "pipeline.idea": "أريد تطبيقاً يمكن للأشخاص من خلاله حجز خدمات التنظيف المنزلية والدفع عبر الإنترنت.",

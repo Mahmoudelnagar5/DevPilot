@@ -16,12 +16,13 @@ import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { groqChatStream } from "../lib/groq";
+import { ReviewDialog } from "../components/ReviewDialog";
 
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "../components/ui/table";
 import {
-  Activity, TrendingUp, Wallet, Send, Check, X, Plus, ArrowRight,
+  Activity, TrendingUp, Wallet, Send, Check, X, Plus, ArrowRight, Star,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription,
@@ -53,6 +54,9 @@ function ClientDashboard() {
   const spent = projects.reduce((s, p) => s + p.spent, 0);
   const inExecution = projects.filter((p) => p.status === "in-progress").length;
   const awaiting = projects.filter((p) => p.status === "tm-review" || p.status === "client-approval").length;
+  
+  // Review dialog state
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
   // Get user name from profile or auth metadata
   const userName = profile?.full_name || (authUser?.user_metadata?.full_name as string) || authUser?.email?.split("@")[0] || "User";
@@ -63,7 +67,14 @@ function ClientDashboard() {
       <PageHeader
         title={greeting}
         subtitle={t("client.welcomeSub")}
-        action={<NewProjectDialog />}
+        action={
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setReviewDialogOpen(true)}>
+              <Star className="size-4" /> {t("review.leaveReview")}
+            </Button>
+            <NewProjectDialog />
+          </div>
+        }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -79,6 +90,9 @@ function ClientDashboard() {
           <ProjectCard key={proj.id} project={proj} onOpen={() => openProject(proj.id)} />
         ))}
       </div>
+      
+      {/* Review Dialog */}
+      <ReviewDialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen} />
     </div>
   );
 }
