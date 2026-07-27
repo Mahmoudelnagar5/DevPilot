@@ -3,7 +3,9 @@
  * Run this ONCE with: node apply-migration.mjs
  * Applies the DevPilot profiles table migration using the Supabase service-role key.
  *
- * WARNING: Never commit the service-role key to git.
+ * IMPORTANT: Add these to your .env file:
+ * SUPABASE_PROJECT_REF=your_project_ref
+ * SUPABASE_SERVICE_KEY=your_service_key
  */
 
 import { config } from 'dotenv';
@@ -127,7 +129,7 @@ async function applyMigration() {
   } else {
     console.log("\n⚠️  Direct SQL endpoint not available (expected for anon key).");
     console.log("\n📋 MANUAL STEP REQUIRED:");
-    console.log("   1. Go to: https://supabase.com/dashboard/project/chxqtomltraqbtqpwglk/sql/new");
+    console.log(`   1. Go to: https://supabase.com/dashboard/project/${PROJECT_REF}/sql/new`);
     console.log("   2. Paste the SQL from: supabase/migrations/20260727_profiles.sql");
     console.log("   3. Click Run ▶");
   }

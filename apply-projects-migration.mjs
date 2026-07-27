@@ -108,7 +108,7 @@ async function applyMigration() {
   } else {
     console.log("\n⚠️  Direct SQL endpoint not available.");
     console.log("\n📋 MANUAL STEP REQUIRED:");
-    console.log("   1. Go to: https://supabase.com/dashboard/project/chxqtomltraqbtqpwglk/sql/new");
+    console.log(`   1. Go to: https://supabase.com/dashboard/project/${PROJECT_REF}/sql/new`);
     console.log("   2. Paste the SQL from: supabase/migrations/20260728_projects.sql");
     console.log("   3. Click Run ▶");
     console.log("\nThe app will still work — it falls back to in-memory data when Supabase is unavailable.");

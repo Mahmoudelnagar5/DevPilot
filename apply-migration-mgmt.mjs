@@ -2,6 +2,10 @@
  * apply-migration-mgmt.mjs
  * Uses the Supabase Management API to run raw SQL on the project.
  * Run: node apply-migration-mgmt.mjs
+ * 
+ * IMPORTANT: Add these to your .env file:
+ * SUPABASE_PROJECT_REF=your_project_ref
+ * SUPABASE_SERVICE_KEY=your_service_key
  */
 
 import { config } from 'dotenv';
