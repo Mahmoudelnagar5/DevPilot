@@ -37,8 +37,9 @@ const COLUMNS: { key: Task["status"]; label: string }[] = [
 
 function KanbanBoard() {
   const { t } = useLanguage();
-  const p = projectById("p-ledgerloop")!;
-  const [tasks, setTasks] = useState<Task[]>(p.tasks);
+  const { projectId, getProject, projects } = useApp();
+  const p = getProject(projectId) || projects[0] || projectById("p-ledgerloop");
+  const [tasks, setTasks] = useState<Task[]>(p?.tasks ?? []);
   const [dragId, setDragId] = useState<string | null>(null);
 
   const columns: { key: Task["status"]; label: string }[] = [
@@ -96,7 +97,7 @@ function KanbanBoard() {
                     </div>
                   );
                 })}
-                {items.length === 0 && <div className="rounded-md border border-dashed border-border py-6 text-center text-xs text-muted-foreground">Drop here</div>}
+                {items.length === 0 && <div className="rounded-md border border-dashed border-border py-6 text-center text-xs text-muted-foreground">{t("dev.dropHere")}</div>}
               </div>
             </div>
           );
@@ -108,9 +109,10 @@ function KanbanBoard() {
 
 function TimeTracking() {
   const { t } = useLanguage();
-  const p = projectById("p-ledgerloop")!;
+  const { projectId, getProject, projects } = useApp();
+  const p = getProject(projectId) || projects[0] || projectById("p-ledgerloop");
   const me = CURRENT_USER.developer.id;
-  const myTasks = p.tasks.filter((t) => t.assignee === me);
+  const myTasks = (p?.tasks ?? []).filter((t) => t.assignee === me);
   const [running, setRunning] = useState<string | null>(null);
   const [seconds, setSeconds] = useState(0);
   const totalLogged = myTasks.reduce((s, t) => s + t.hoursLogged, 0);
@@ -170,17 +172,17 @@ function CodeReviews() {
             <GitPullRequest className="size-5 text-primary" />
             <div>
               <div className="font-medium">{codeReview.pr}</div>
-              <div className="text-xs text-muted-foreground font-mono">reviewed by Gemini · 3 comments</div>
+              <div className="text-xs text-muted-foreground font-mono">{t("dev.reviewedBy")}</div>
             </div>
           </div>
           <div className="flex items-center gap-6">
             <div className="text-center">
               <div className="font-display text-2xl font-semibold text-success">{codeReview.qualityScore}</div>
-              <div className="text-[10px] text-muted-foreground font-mono">QUALITY</div>
+              <div className="text-[10px] text-muted-foreground font-mono">{t("tm.quality")}</div>
             </div>
             <div className="text-center">
               <div className="font-display text-2xl font-semibold text-destructive">{codeReview.securityFlags}</div>
-              <div className="text-[10px] text-muted-foreground font-mono">SECURITY</div>
+              <div className="text-[10px] text-muted-foreground font-mono">{t("tm.security")}</div>
             </div>
           </div>
         </div>
@@ -217,7 +219,7 @@ function DailyLog() {
     <div className="max-w-3xl p-4 sm:p-6">
       <PageHeader title={t("dev.dailyLog")} subtitle={t("dev.dailyLogSubtitle")} />
       <Panel className="mb-4 p-4">
-        <Textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={3} placeholder="What did you work on today? Any blockers?" />
+        <Textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={3} placeholder={t("dev.workPlaceholder")} />
         <div className="mt-3 flex flex-col justify-end gap-2 sm:flex-row">
           <Button variant="outline" onClick={() => draft && toast.success("AI summary drafted from your update")}>{t("dev.summarizeAi")}</Button>
           <Button onClick={() => { if (draft) { setEntries((e) => [{ day: "Today", text: draft }, ...e]); setDraft(""); toast.success("Log posted"); } }}>
@@ -239,9 +241,10 @@ function DailyLog() {
 
 function StandupCoach() {
   const { t } = useLanguage();
-  const p = projectById("p-ledgerloop")!;
+  const { projectId, getProject, projects } = useApp();
+  const p = getProject(projectId) || projects[0] || projectById("p-ledgerloop");
   const me = CURRENT_USER.developer.id;
-  const completed = p.tasks.filter((task) => task.assignee === me && (task.status === "done" || task.hoursLogged > 0));
+  const completed = (p?.tasks ?? []).filter((task) => task.assignee === me && (task.status === "done" || task.hoursLogged > 0));
   const [editing, setEditing] = useState(false);
   const [points, setPoints] = useState([
     "Yesterday: I implemented the Plaid pending-to-posted transition path and added idempotency coverage.",
@@ -264,16 +267,16 @@ function StandupCoach() {
       <div className="grid gap-4 lg:grid-cols-[.8fr_1.2fr]">
         <div className="space-y-4">
           <Panel className="p-5">
-            <div className="flex items-center justify-between gap-2"><h3>Activity summary</h3><span className="flex items-center gap-1 text-xs text-primary"><Sparkles className="size-3.5" /> AI prepared</span></div>
+            <div className="flex items-center justify-between gap-2"><h3>{t("dev.activitySummary")}</h3><span className="flex items-center gap-1 text-xs text-primary"><Sparkles className="size-3.5" /> {t("dev.aiPrepared")}</span></div>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">You logged <Mono className="text-foreground">11 hours</Mono> across {completed.length} active or completed items. Your main progress was on Plaid reconciliation, with one security issue and one concurrency issue surfaced during review.</p>
             <div className="mt-4 space-y-2">{completed.map((task) => <div key={task.id} className="rounded-md border border-border bg-muted/20 p-3"><div className="flex items-center justify-between gap-2"><Mono className="text-xs text-primary">{task.key}</Mono><StatusPill status={task.status} /></div><div className="mt-1 text-sm">{task.title}</div><div className="mt-1 text-xs text-muted-foreground">{task.hoursLogged}h logged · {task.points} points</div></div>)}</div>
           </Panel>
-          <Panel className="border-warning/30 bg-warning/5 p-5"><div className="flex items-center gap-2 text-warning"><AlertTriangle className="size-4" /><h3>Coach note</h3></div><p className="mt-2 text-sm text-muted-foreground">Lead with the user impact, not implementation detail. Ask Lina for a decision on pending cash treatment so the blocker has a clear owner.</p></Panel>
+          <Panel className="border-warning/30 bg-warning/5 p-5"><div className="flex items-center gap-2 text-warning"><AlertTriangle className="size-4" /><h3>{t("dev.coachNote")}</h3></div><p className="mt-2 text-sm text-muted-foreground">Lead with the user impact, not implementation detail. Ask Lina for a decision on pending cash treatment so the blocker has a clear owner.</p></Panel>
         </div>
         <Panel className="p-5">
-          <div className="flex flex-wrap items-start justify-between gap-3"><div><h3>Your 3 talking points</h3><p className="text-xs text-muted-foreground">AI drafted. Edit before sharing; nothing is posted automatically.</p></div><Button size="sm" variant="ghost" onClick={() => setEditing((value) => !value)}><Pencil className="size-4" /> {editing ? "Done editing" : "Edit"}</Button></div>
+          <div className="flex flex-wrap items-start justify-between gap-3"><div><h3>{t("dev.talkingPoints")}</h3><p className="text-xs text-muted-foreground">{t("dev.aiDrafted")}</p></div><Button size="sm" variant="ghost" onClick={() => setEditing((value) => !value)}><Pencil className="size-4" /> {editing ? t("dev.doneEditing") : t("common.edit")}</Button></div>
           <div className="mt-5 space-y-3">{points.map((point, index) => <div key={index} className="flex gap-3 rounded-lg border border-border bg-muted/20 p-4"><div className="grid size-7 shrink-0 place-items-center rounded-md bg-primary/15 font-mono text-xs text-primary">{index + 1}</div>{editing ? <Textarea className="min-h-20" value={point} onChange={(event) => setPoints((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} /> : <p className="text-sm leading-relaxed">{point}</p>}</div>)}</div>
-          <div className="mt-5 flex flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between"><div className="text-xs text-muted-foreground"><CheckCircle2 className="mr-1 inline size-3.5 text-success" /> Private draft · only you can share it</div><Button onClick={() => toast.success("Standup update shared with the project channel.")}><Send className="size-4" /> Approve & share</Button></div>
+          <div className="mt-5 flex flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between"><div className="text-xs text-muted-foreground"><CheckCircle2 className="mr-1 inline size-3.5 text-success" /> {t("dev.privateDraft")}</div><Button onClick={() => toast.success("Standup update shared with the project channel.")}><Send className="size-4" /> {t("dev.approveShare")}</Button></div>
         </Panel>
       </div>
     </div>
@@ -295,11 +298,11 @@ function DevProfile() {
             <div className="mt-1 text-sm"><Mono className="text-primary">{money(me.rate ?? 0)}/hr</Mono> · <span className="text-muted-foreground">{me.availability}% available</span></div>
           </div>
         </div>
-        <SectionTitle>Skills</SectionTitle>
+        <SectionTitle>{t("dev.skillsSection")}</SectionTitle>
         <div className="flex flex-wrap gap-2">
           {me.skills?.map((s) => <span key={s} className="rounded-md border border-border bg-muted px-3 py-1 text-sm font-mono">{s}</span>)}
         </div>
-        <SectionTitle>Links</SectionTitle>
+        <SectionTitle>{t("dev.linksSection")}</SectionTitle>
         <div className="space-y-2">
           {[{ icon: <Github className="size-4" />, label: "github.com/youssef-a" }, { icon: <Linkedin className="size-4" />, label: "linkedin.com/in/youssef" }, { icon: <Link2 className="size-4" />, label: "youssef.dev" }].map((l) => (
             <a key={l.label} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">{l.icon}{l.label}</a>

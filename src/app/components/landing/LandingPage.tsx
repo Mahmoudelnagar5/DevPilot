@@ -1,9 +1,9 @@
-import { type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 import {
   ArrowRight, ArrowDown, Search, FileText, ListChecks, KanbanSquare, Boxes, GitBranch,
   Users, ShieldAlert, CalendarClock, DollarSign, MessageSquare, BookOpen,
-  GitPullRequest, BarChart3, Bot, Check, X, Sparkles, FileClock, Globe,
+  GitPullRequest, BarChart3, Bot, Check, X, Sparkles, FileClock, Globe, Coins,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -149,6 +149,27 @@ function getPlans(isAr: boolean) {
       highlighted: false,
     },
     {
+      name: isAr ? "نظام الأرصدة (Request Credit)" : "Request Credits",
+      price: "$29+",
+      priceNote: isAr ? " / حسب الاستهلاك" : " / pay-as-you-go",
+      tagline: isAr ? "شحن رصيد واستخدام الميزات دون اشتراك شهري" : "Pay-as-you-go token credits — no monthly commitment",
+      features: isAr ? [
+        "تبدأ من 2,000 كريديت مقابل $29", "خصومات تصل إلى 23% للباقات الكبيرة",
+        "خصم تلقائي حسب الميزة المستخدمة", "الأرصدة لا تنتهي صلاحيتها أبداً",
+        "إشعارات انخفاض الرصيد", "إمكانية إعادة الشحن في أي وقت",
+      ] : [
+        "Starts at 2,000 credits for $29", "Up to 23% discount on larger packs",
+        "Auto-deducted per feature used", "Credits never expire",
+        "Low-balance notifications", "Top up anytime",
+      ],
+      note: isAr ? "مثال: 500 كريديت لخطة AI كاملة، 150 كريديت للمحاكي." : "e.g. 500 cr for AI Plan, 150 cr for Simulator.",
+      checks: [
+        isAr ? "مرونة كاملة وبدون أي اشتراكات شهرية إجبارية." : "Full flexibility with zero monthly lock-in.",
+      ],
+      cta: isAr ? "شحن الأرصدة" : "Get Credits",
+      highlighted: true,
+    },
+    {
       name: isAr ? "الاحترافية" : "Professional",
       price: "$49",
       priceNote: isAr ? "/شهرياً" : "/month",
@@ -166,7 +187,7 @@ function getPlans(isAr: boolean) {
         isAr ? "مدير تقني يتحقق من القرارات المفصلية عند ارتفاع المخاطر." : "Technical Manager validates critical decisions when risk is high.",
       ],
       cta: isAr ? "ابدأ البناء" : "Start Building",
-      highlighted: true,
+      highlighted: false,
     },
     {
       name: isAr ? "الفريق" : "Team",
@@ -272,6 +293,303 @@ function FlowNode({ children, highlight = false }: { children: ReactNode; highli
       )}
     >
       {children}
+    </div>
+  );
+}
+
+function RequestCreditPreview({ isAr }: { isAr: boolean }) {
+  const [activeTab, setActiveTab] = useState<"how" | "features" | "packs" | "policy">("how");
+  const [selectedPack, setSelectedPack] = useState<number>(0);
+
+  const packs = isAr ? [
+    { name: "Starter",    price: 29,  tokens: 2_000,  badge: null,           color: "text-muted-foreground", border: "border-border" },
+    { name: "Builder",    price: 59,  tokens: 4_500,  badge: "الأكثر شعبية", color: "text-primary",          border: "border-primary/50" },
+    { name: "Agency",     price: 99,  tokens: 8_000,  badge: "وفر 18%",      color: "text-chart-2",          border: "border-chart-2/40" },
+    { name: "Enterprise", price: 199, tokens: 18_000, badge: "وفر 23%",      color: "text-amber-400",        border: "border-amber-400/40" },
+  ] : [
+    { name: "Starter",    price: 29,  tokens: 2_000,  badge: null,           color: "text-muted-foreground", border: "border-border" },
+    { name: "Builder",    price: 59,  tokens: 4_500,  badge: "Most Popular",  color: "text-primary",          border: "border-primary/50" },
+    { name: "Agency",     price: 99,  tokens: 8_000,  badge: "Save 18%",     color: "text-chart-2",          border: "border-chart-2/40" },
+    { name: "Enterprise", price: 199, tokens: 18_000, badge: "Save 23%",     color: "text-amber-400",        border: "border-amber-400/40" },
+  ];
+
+  const features = isAr ? [
+    { icon: "🎁", name: "توليد الخطة والمعمارية المبدئية",       cost: 0,    note: "مجاناً بالكامل في الخطة المجانية (Free Tier)" },
+    { icon: "👨‍💻", name: "الإشراف البشري واعتكاد المدير التقني (TM)", cost: 500,  note: "مراجعة واعتماد القرارات المفصلية من مهندس تقني" },
+    { icon: "📡", name: "المتابعة المستمرة وتتبع صحة المشروع",    cost: 100,  note: "تحديثات أسبوعية لمؤشر الصحة والتتبع (لكل أسبوع)" },
+    { icon: "✍️", name: "اعتماد المراحل المالية وسجل القرارات",  cost: 200,  note: "مراجعة التسليمات وتوثيق القرارات في Ledger" },
+    { icon: "🛡️", name: "مراجعة الكود والأمان على PRs",          cost: 150,  note: "فحص الثغرات الأمنية وجودة الكود لكل طلب سحب" },
+    { icon: "📊", name: "تشغيل محاكي الأثر (Impact Simulator)", cost: 150,  note: "تحليل تأثير التغييرات على الميزانية والجدول" },
+    { icon: "📞", name: "طلب استشارة مباشرة مع مدير تقني",      cost: 300,  note: "جلسة استشارية هندسية لحل المعضلات المعقدة" },
+    { icon: "💬", name: "استفسارات المساعد الذكي أثناء التتبع",  cost: 10,   note: "محادثات المتابعة والاستفسارات من AI Chat" },
+  ] : [
+    { icon: "🎁", name: "Initial AI Plan & Architecture",       cost: 0,    note: "100% Free in the Free Tier" },
+    { icon: "👨‍💻", name: "Human Oversight & TM Sign-off",        cost: 500,  note: "Critical decision validation by a Technical Manager" },
+    { icon: "📡", name: "Continuous Tracking & Health Monitor", cost: 100,  note: "Weekly health score updates & pipeline tracking" },
+    { icon: "✍️", name: "Milestone & Decision Ledger Signature", cost: 200,  note: "Deliverable review & immutable decision logging" },
+    { icon: "🛡️", name: "AI Code & Security Review on PRs",      cost: 150,  note: "Vulnerability detection & code quality audit" },
+    { icon: "📊", name: "Impact Simulator Run",                  cost: 150,  note: "Analyze scope change impact on budget & timeline" },
+    { icon: "📞", name: "Live TM Technical Advisory Session",   cost: 300,  note: "Direct consultation for complex engineering blockers" },
+    { icon: "💬", name: "AI Assistant Execution Chat Message",   cost: 10,   note: "Ongoing status queries & follow-up chat" },
+  ];
+
+  const currentPack = packs[selectedPack];
+  const tokensPerDollar = Math.round(currentPack.tokens / currentPack.price);
+
+  const exampleUsage = isAr ? [
+    { action: "اعتماد مراجعة وإشراف بشري", cost: 500,  qty: Math.floor(currentPack.tokens / 500) },
+    { action: "أسابيع متابعة وتتبع مستمر",   cost: 100,  qty: Math.floor(currentPack.tokens / 100) },
+    { action: "جلسة محاكي الأثر",         cost: 150,  qty: Math.floor(currentPack.tokens / 150) },
+  ] : [
+    { action: "TM Human Oversight Reviews", cost: 500,  qty: Math.floor(currentPack.tokens / 500) },
+    { action: "Weeks of Active Tracking",   cost: 100,  qty: Math.floor(currentPack.tokens / 100) },
+    { action: "Impact Simulator Runs",      cost: 150,  qty: Math.floor(currentPack.tokens / 150) },
+  ];
+
+  const howSteps = isAr ? [
+    {
+      icon: "①", title: "تخطيط المشروع المبدئي — مجاني بالكامل",
+      desc: "توليد خطة المشروع، المعمارية، والمتطلبات مجاني تماماً بالذكاء الاصطناعي دون أي تكلفة.",
+    },
+    {
+      icon: "②", title: "انتقل للتنفيذ — الكريديتس للتراكنج والإشراف",
+      desc: "عند بدء تنفيذ المشروع، تُسحب الكريديتس فقط للمتابعة الحية، الإشراف البشري من المدير التقني، فحص الكود، ومحاكي الأثر.",
+    },
+    {
+      icon: "③", title: "تابع رصيدك واشحن عند الحاجة",
+      desc: "لوحة التحكم تظهر رصيدك المتبقي في كل وقت. أعد الشحن بأي باقة عند انخفاض الرصيد — بدون رسوم شهرية إجبارية.",
+    },
+  ] : [
+    {
+      icon: "①", title: "Initial AI Planning — 100% Free",
+      desc: "Generate your initial AI project plan, architecture, and sprint scope completely free.",
+    },
+    {
+      icon: "②", title: "Move to Execution — Credits for Tracking & Oversight",
+      desc: "Credits are only deducted for active project tracking, TM human oversight, PR security audits, and impact simulations.",
+    },
+    {
+      icon: "③", title: "Track Your Balance & Top Up Anytime",
+      desc: "Your dashboard always shows your live credit balance. Top up with any pack when your balance is low — no mandatory monthly subscription.",
+    },
+  ];
+
+  const policies = isAr ? [
+    { label: "ما هو الكريديت؟",      value: "الكريديت هو وحدة الاستخدام داخل DevPilot. كل ميزة تستخدمها تخصم عدداً محدداً من الكريديتس من رصيدك تلقائياً." },
+    { label: "هل الأرصدة تنتهي؟",    value: "لا. الأرصدة غير المستخدمة تبقى في محفظتك إلى الأبد — لا توجد تاريخ انتهاء." },
+    { label: "كيف أتابع رصيدي؟",     value: "لوحة التحكم تعرض رصيدك الحالي في الوقت الفعلي مع سجل كل العمليات التي استهلكت كريديتس." },
+    { label: "سياسة الاسترداد",       value: "يمكن استرداد الأرصدة غير المستخدمة بالكامل خلال 30 يوماً من الشراء. الكريديتس التي تم إنفاقها بالفعل غير قابلة للاسترداد." },
+    { label: "هل استشارة TQA مشمولة؟", value: "لا. الاستشارات مع خبراء TQA تُحجز ويُدفع ثمنها بشكل منفصل حسب مستوى الخبير والأولوية." },
+  ] : [
+    { label: "What is a credit?",      value: "A credit is DevPilot's usage unit. Every feature you use automatically deducts a set number of credits from your live balance." },
+    { label: "Do credits expire?",     value: "No. Unused credits stay in your wallet forever — there is no expiry date." },
+    { label: "How do I track usage?",  value: "Your dashboard shows your live credit balance in real-time with a full log of every action that consumed credits." },
+    { label: "Refund Policy",          value: "Unused credits are 100% refundable within 30 days of purchase. Already-spent credits cannot be refunded." },
+    { label: "Are TQA sessions included?", value: "No. TQA expert consultations are booked and paid separately based on expertise tier and urgency." },
+  ];
+
+  const tabs = isAr
+    ? [{ key: "how", label: "كيف يعمل" }, { key: "features", label: "تكلفة كل ميزة" }, { key: "packs", label: "باقات الشحن" }, { key: "policy", label: "السياسة" }]
+    : [{ key: "how", label: "How it works" }, { key: "features", label: "Feature Costs" }, { key: "packs", label: "Credit Packs" }, { key: "policy", label: "Policy" }];
+
+  return (
+    <div className="mt-12 overflow-hidden rounded-2xl border border-primary/30 bg-card/60 backdrop-blur-md shadow-xl text-left rtl:text-right">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/80 px-6 py-5 sm:px-8">
+        <div>
+          <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-primary font-semibold">
+            <Coins className="size-4 text-primary" />
+            {isAr ? "نظام الكريديتس — كيف يعمل؟" : "Request Credit — Token Consumption Model"}
+          </div>
+          <h3 className="mt-1 font-display text-xl font-bold">
+            {isAr ? "اشحن رصيدك، استخدم الميزات، الكريديتس تُسحب تلقائياً" : "Buy Credits, Use Features — Your Balance Deducts Automatically"}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {isAr
+              ? "مثال: $29 = 2,000 كريديت. توليد خطة AI = 500 كريديت. كل ميزة لها تكلفة محددة وشفافة."
+              : "Example: $29 = 2,000 credits. Generating an AI plan = 500 credits. Every feature has a clear, transparent cost."}
+          </p>
+        </div>
+        <Badge variant="outline" className="self-start md:self-center border-primary/40 text-primary px-3 py-1 font-mono text-xs shrink-0 whitespace-nowrap">
+          {isAr ? "نموذج الاستهلاك" : "Consumption Model"}
+        </Badge>
+      </div>
+
+      {/* Tab Bar */}
+      <div className="flex border-b border-border/80 bg-card/30 overflow-x-auto">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key as typeof activeTab)}
+            className={cn(
+              "flex-1 min-w-max px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap",
+              activeTab === tab.key
+                ? "border-b-2 border-primary text-primary bg-primary/[0.05]"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="p-6 sm:p-8">
+        {/* TAB: How it works */}
+        {activeTab === "how" && (
+          <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-3">
+              {howSteps.map((step) => (
+                <div key={step.icon} className="rounded-xl border border-border bg-card/50 p-5">
+                  <div className="text-2xl font-mono text-primary mb-2">{step.icon}</div>
+                  <h4 className="font-display font-semibold text-sm mb-1">{step.title}</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Mini credit flow diagram */}
+            <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-5">
+              <p className="text-xs font-mono uppercase tracking-wider text-primary font-semibold mb-4">
+                {isAr ? "مثال عملي — باقة Starter" : "Live Example — Starter Pack"}
+              </p>
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="rounded-lg bg-primary/10 border border-primary/30 px-3 py-2 font-mono font-bold text-primary">$29</span>
+                <span className="text-muted-foreground">→</span>
+                <span className="rounded-lg bg-card border border-border px-3 py-2 font-mono font-semibold">2,000 {isAr ? "كريديت" : "credits"}</span>
+                <span className="text-muted-foreground">→</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { label: isAr ? "خطة AI" : "AI Plan", cost: 500, color: "bg-chart-2/10 border-chart-2/30 text-chart-2" },
+                    { label: isAr ? "خطة AI" : "AI Plan", cost: 500, color: "bg-chart-2/10 border-chart-2/30 text-chart-2" },
+                    { label: isAr ? "محاكي" : "Simulator", cost: 150, color: "bg-blue-500/10 border-blue-500/30 text-blue-400" },
+                    { label: isAr ? "دردشة ×85" : "Chat ×85", cost: 850, color: "bg-muted border-border text-muted-foreground" },
+                  ].map((item, i) => (
+                    <span key={i} className={cn("rounded-md border px-2 py-1 text-[11px] font-mono", item.color)}>
+                      {item.label} <span className="opacity-70">−{item.cost.toLocaleString()}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                {isAr
+                  ? "= 2 خطة AI كاملة (1,000 كريديت) + محاكي (150 كريديت) + 85 رسالة AI Chat (850 كريديت) = 2,000 كريديت تقريباً"
+                  : "= 2 full AI plans (1,000 cr) + 1 Impact Simulator (150 cr) + 85 AI chat messages (850 cr) ≈ 2,000 credits used"}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: Feature Costs */}
+        {activeTab === "features" && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {isAr
+                ? "كل ميزة تخصم عدداً محدداً من الكريديتس من رصيدك تلقائياً عند الاستخدام."
+                : "Every feature automatically deducts a fixed number of credits from your balance when used."}
+            </p>
+            <div className="rounded-xl border border-border overflow-hidden">
+              <div className="grid grid-cols-[1fr_auto] bg-muted/50 px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <span>{isAr ? "الميزة" : "Feature"}</span>
+                <span className="text-right">{isAr ? "التكلفة" : "Cost"}</span>
+              </div>
+              {features.map((f, i) => (
+                <div
+                  key={f.name}
+                  className={cn(
+                    "grid grid-cols-[1fr_auto] items-center gap-4 px-4 py-3 border-t border-border/60",
+                    i % 2 === 0 ? "bg-card/30" : "bg-card/60"
+                  )}
+                >
+                  <div>
+                    <span className="text-sm font-medium text-foreground">{f.icon} {f.name}</span>
+                    <span className="block text-[11px] text-muted-foreground mt-0.5">{f.note}</span>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="font-mono text-sm font-bold text-primary">{f.cost.toLocaleString()}</span>
+                    <span className="text-[10px] text-muted-foreground block">{isAr ? "كريديت" : "credits"}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: Credit Packs */}
+        {activeTab === "packs" && (
+          <div className="space-y-5">
+            <p className="text-sm text-muted-foreground">
+              {isAr
+                ? "اختر الباقة المناسبة لاحتياجاتك — الباقات الأكبر توفر كريديتس أكثر بسعر أقل."
+                : "Choose the pack that fits your needs — larger packs give you more credits per dollar."}
+            </p>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {packs.map((pack, idx) => (
+                <button
+                  key={pack.name}
+                  onClick={() => setSelectedPack(idx)}
+                  className={cn(
+                    "relative rounded-xl border p-4 text-left rtl:text-right transition-all",
+                    selectedPack === idx
+                      ? `${pack.border} bg-primary/[0.04] shadow-sm`
+                      : "border-border bg-card/50 hover:border-primary/30"
+                  )}
+                >
+                  {pack.badge && (
+                    <span className="absolute -top-2.5 left-3 rtl:left-auto rtl:right-3 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+                      {pack.badge}
+                    </span>
+                  )}
+                  <div className={cn("text-base font-display font-bold", pack.color)}>{pack.name}</div>
+                  <div className="mt-1 font-mono text-2xl font-extrabold text-foreground">${pack.price}</div>
+                  <div className={cn("mt-1 font-mono text-sm font-semibold", pack.color)}>
+                    {pack.tokens.toLocaleString()} {isAr ? "كريديت" : "credits"}
+                  </div>
+                  <div className="mt-0.5 text-[11px] text-muted-foreground">
+                    ~{Math.round(pack.tokens / pack.price).toLocaleString()} {isAr ? "كريديت/$" : "credits/$"}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-5">
+              <p className="text-xs font-mono uppercase tracking-wider text-primary font-semibold mb-3">
+                {isAr
+                  ? `بباقة ${currentPack.name} ($${currentPack.price}) تحصل على ${currentPack.tokens.toLocaleString()} كريديت — يمكنك:`
+                  : `With the ${currentPack.name} pack ($${currentPack.price}) = ${currentPack.tokens.toLocaleString()} credits — you can run:`}
+              </p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {exampleUsage.map((ex) => (
+                  <div key={ex.action} className="rounded-lg border border-border bg-card/60 p-3 text-center">
+                    <div className="font-mono text-2xl font-extrabold text-primary">{ex.qty.toLocaleString()}×</div>
+                    <div className="mt-1 text-xs text-muted-foreground">{ex.action}</div>
+                    <div className="mt-0.5 text-[10px] font-mono text-muted-foreground/60">
+                      ({ex.cost.toLocaleString()} {isAr ? "كريديت/مرة" : "cr each"})
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-[11px] text-muted-foreground">
+                💡 {isAr
+                  ? `أو مزيج من الميزات المختلفة — رصيدك يُسحب فقط عند الاستخدام الفعلي. ~${tokensPerDollar} كريديت لكل دولار.`
+                  : `Or any combination of features — your balance is only deducted when you actually use a feature. ~${tokensPerDollar} credits per dollar.`}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: Policy */}
+        {activeTab === "policy" && (
+          <div className="space-y-3">
+            {policies.map((p) => (
+              <div key={p.label} className="rounded-xl border border-border bg-card/50 p-4">
+                <div className="text-sm font-semibold text-foreground mb-1">{p.label}</div>
+                <div className="text-sm text-muted-foreground leading-relaxed">{p.value}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -659,7 +977,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
             </p>
           </Reveal>
 
-          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {PLANS.map((plan, i) => (
               <Reveal key={plan.name} delay={i * 0.05}>
                 <div
@@ -713,6 +1031,10 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
               </Reveal>
             ))}
           </div>
+
+          <Reveal delay={0.25}>
+            <RequestCreditPreview isAr={isAr} />
+          </Reveal>
         </div>
       </section>
 

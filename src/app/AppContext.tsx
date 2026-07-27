@@ -1,6 +1,9 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import { projects as seedProjects, CURRENT_USER, type Role, type Project } from "./data/mock";
 import { generateProjectPlan } from "./lib/groq";
+import { fetchProjects, insertProject, patchProject } from "./lib/projectsService";
+import { supabase } from "./lib/supabase";
+import { loadLocalProjects, saveLocalProjects } from "./lib/localProjectsService";
 
 export interface NewProjectInput {
   name: string;
@@ -50,76 +53,125 @@ interface AppState {
   setPage: (p: string) => void;
   projectId: string;
   openProject: (id: string) => void;
-  // live project data (shared across all roles)
   projects: Project[];
   getProject: (id: string) => Project | undefined;
-  addProject: (input: NewProjectInput) => void;
+  addProject: (input: NewProjectInput) => Project;
   updateProject: (id: string, patch: Partial<Project>) => void;
   updateProjectStatus: (id: string, status: Project["status"]) => void;
   ledger: LedgerEntry[];
   addLedgerEntry: (entry: Omit<LedgerEntry, "id" | "timestamp" | "signature" | "actor" | "actorRole">) => void;
   decideLedgerEntry: (id: string, decision: "approved" | "rejected") => void;
+  /** true while the initial Supabase project load is in flight */
+  projectsLoading: boolean;
 }
 
 const Ctx = createContext<AppState | null>(null);
 
-// Default landing page per role.
 export const DEFAULT_PAGE: Record<Role, string> = {
-  client: "dashboard",
+  client:    "dashboard",
   developer: "board",
-  tm: "overview",
-  admin: "analytics",
+  tm:        "overview",
+  admin:     "analytics",
 };
 
-// Builds a full Project object from the client's short intake, filling in the
-// AI-drafted defaults so the new project renders everywhere immediately.
 function createProjectFromInput(input: NewProjectInput): Project {
   const id = "p-" + input.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Date.now().toString().slice(-4);
   const start = new Date();
-  const end = new Date();
+  const end   = new Date();
   end.setDate(end.getDate() + 12 * 7);
   return {
     id,
-    name: input.name,
-    client: "u-nadia",
-    domain: "New submission",
-    description: input.description,
-    complexity: "Medium",
-    status: "tm-review", // waiting on the Technical Manager
-    health: 70,
-    progress: 0,
-    riskScore: 30,
-    riskFlags: ["Scope to be confirmed"],
-    budgetLow: 38000,
-    budgetHigh: 62000,
-    spent: 0,
-    timelineWeeks: 12,
+    name:           input.name,
+    client:         "u-nadia",
+    domain:         "New submission",
+    description:    input.description,
+    complexity:     "Medium",
+    status:         "tm-review",
+    health:         70,
+    progress:       0,
+    riskScore:      30,
+    riskFlags:      ["Scope to be confirmed"],
+    budgetLow:      38000,
+    budgetHigh:     62000,
+    spent:          0,
+    timelineWeeks:  12,
     predictedStart: start.toISOString().slice(0, 10),
-    predictedEnd: end.toISOString().slice(0, 10),
-    team: ["u-lina"],
-    cover: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&h=400&fit=crop&auto=format",
+    predictedEnd:   end.toISOString().slice(0, 10),
+    team:           ["u-lina"],
+    cover:          "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&h=400&fit=crop&auto=format",
     milestones: [
       { id: "m1", name: "Discovery & Foundations", due: end.toISOString().slice(0, 10), amount: 14000, status: "upcoming", progress: 0 },
-      { id: "m2", name: "Core Build", due: end.toISOString().slice(0, 10), amount: 26000, status: "upcoming", progress: 0 },
-      { id: "m3", name: "Launch & Hardening", due: end.toISOString().slice(0, 10), amount: 18000, status: "upcoming", progress: 0 },
+      { id: "m2", name: "Core Build",              due: end.toISOString().slice(0, 10), amount: 26000, status: "upcoming", progress: 0 },
+      { id: "m3", name: "Launch & Hardening",      due: end.toISOString().slice(0, 10), amount: 18000, status: "upcoming", progress: 0 },
     ],
-    invoices: [],
-    tasks: [],
-    aiPlanStatus: "generating",
+    invoices:      [],
+    tasks:         [],
+    aiPlanStatus:  "generating",
   };
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [role, setRoleState] = useState<Role>("client");
-  const [page, setPage] = useState<string>(DEFAULT_PAGE.client);
-  const [projectId, setProjectId] = useState<string>("p-ledgerloop");
-  const [projects, setProjects] = useState<Project[]>(seedProjects);
-  const [ledger, setLedger] = useState<LedgerEntry[]>(seedLedger);
+  const [role,            setRoleState]     = useState<Role>("client");
+  const [page,            setPage]          = useState<string>(DEFAULT_PAGE.client);
+  const [projectId,       setProjectId]     = useState<string>("p-ledgerloop");
+  const [projects,        setProjects]      = useState<Project[]>(() => {
+    const local = loadLocalProjects();
+    return local.length > 0 ? local : seedProjects;
+  });
+  const [ledger,          setLedger]        = useState<LedgerEntry[]>(seedLedger);
+  const [projectsLoading, setProjectsLoading] = useState<boolean>(false);
 
-  const setRole = (r: Role) => {
-    setRoleState(r);
-    setPage(DEFAULT_PAGE[r]);
-  };
+  // Persist projects to localStorage whenever they change
+  const isInitialRender = useRef(true);
+  useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
+    }
+    saveLocalProjects(projects);
+  }, [projects]);
+
+  // -------------------------------------------------------------------------
+  // On mount (and whenever the auth session changes): load projects from
+  // Supabase. If the user is not logged in or the table doesn't exist yet,
+  // we silently keep the local data.
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setProjectsLoading(true);
+      const rows = await fetchProjects();
+      if (!cancelled && rows.length > 0) {
+        // Merge: remote projects take priority; keep local projects for any id not in remote
+        setProjects((prev) => {
+          const remoteIds = new Set(rows.map((r) => r.id));
+          const localOnly = prev.filter((p) => !remoteIds.has(p.id));
+          return [...rows, ...localOnly];
+        });
+      }
+      if (!cancelled) setProjectsLoading(false);
+    }
+
+    load();
+
+    // Re-run when auth state changes (login / logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      if (!cancelled) load();
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const setRole = useCallback((r: Role) => {
+    setRoleState((prevRole) => {
+      if (prevRole !== r) setPage(DEFAULT_PAGE[r]);
+      return r;
+    });
+  }, []);
 
   const openProject = (id: string) => {
     setProjectId(id);
@@ -130,36 +182,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateProject = useCallback((id: string, patch: Partial<Project>) => {
     setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+    // Persist patch to Supabase asynchronously (fire-and-forget)
+    patchProject(id, patch).catch(() => {/* silent — in-memory already updated */});
   }, []);
 
-  const addProject = useCallback((input: NewProjectInput) => {
+  const addProject = useCallback((input: NewProjectInput): Project => {
     const project = createProjectFromInput(input);
     setProjects((prev) => [project, ...prev]);
+    setProjectId(project.id);
+    setPage("project");
+
+    // Persist the skeleton row immediately
+    insertProject(project).catch(() => {/* silent fallback to in-memory */});
 
     // Fire real AI generation in the background
     generateProjectPlan(input.name, input.description)
       .then((aiPlan) => {
-        // Calculate predictedEnd from AI timeline
         const endDate = new Date();
-        endDate.setDate(endDate.getDate() + (aiPlan.timeline.weeks * 7));
+        endDate.setDate(endDate.getDate() + aiPlan.timeline.weeks * 7);
+
+        const aiPatch: Partial<Project> = {
+          aiPlan,
+          aiPlanStatus:   "ready",
+          budgetLow:      aiPlan.budget.low,
+          budgetHigh:     aiPlan.budget.high,
+          timelineWeeks:  aiPlan.timeline.weeks,
+          predictedEnd:   endDate.toISOString().slice(0, 10),
+        };
 
         setProjects((prev) =>
           prev.map((p) =>
-            p.id === project.id
-              ? {
-                  ...p,
-                  aiPlan,
-                  aiPlanStatus: "ready" as const,
-                  // Apply AI-generated budget estimates
-                  budgetLow: aiPlan.budget.low,
-                  budgetHigh: aiPlan.budget.high,
-                  // Apply AI-generated timeline
-                  timelineWeeks: aiPlan.timeline.weeks,
-                  predictedEnd: endDate.toISOString().slice(0, 10),
-                }
-              : p,
+            p.id === project.id ? { ...p, ...aiPatch } : p,
           ),
         );
+
+        // Persist AI plan back to Supabase
+        patchProject(project.id, aiPatch).catch(() => {});
       })
       .catch(() => {
         setProjects((prev) =>
@@ -167,30 +225,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
             p.id === project.id ? { ...p, aiPlanStatus: "error" as const } : p,
           ),
         );
+        patchProject(project.id, { aiPlanStatus: "error" }).catch(() => {});
       });
+
+    return project;
   }, []);
 
   const updateProjectStatus = (id: string, status: Project["status"]) => {
     setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, status } : p)));
+    patchProject(id, { status }).catch(() => {});
+
     const project = projects.find((p) => p.id === id);
     const messages: Partial<Record<Project["status"], string>> = {
-      "tm-review": "Plan returned for Technical Manager review",
+      "tm-review":       "Plan returned for Technical Manager review",
       "client-approval": "Plan released for client approval",
-      "in-progress": "Project plan approved and execution started",
+      "in-progress":     "Project plan approved and execution started",
     };
     if (messages[status]) {
-      addLedgerEntry({ projectId: id, category: "approval", title: messages[status]!, detail: `${project?.name ?? "Project"} moved to ${status.replace(/-/g, " ")}.`, status: status === "in-progress" ? "approved" : "recorded" });
+      addLedgerEntry({
+        projectId: id,
+        category:  "approval",
+        title:     messages[status]!,
+        detail:    `${project?.name ?? "Project"} moved to ${status.replace(/-/g, " ")}.`,
+        status:    status === "in-progress" ? "approved" : "recorded",
+      });
     }
   };
 
   const actorRole = role === "client" ? "Client" : role === "tm" ? "Technical Manager" : role === "developer" ? "Developer" : "Technical Manager";
+
   const addLedgerEntry: AppState["addLedgerEntry"] = (entry) => {
     const now = new Date();
     setLedger((prev) => [{
       ...entry,
-      id: `led-${now.getTime()}`,
+      id:        `led-${now.getTime()}`,
       timestamp: now.toISOString(),
-      actor: CURRENT_USER[role].name,
+      actor:     CURRENT_USER[role].name,
       actorRole,
       signature: `SIG-${CURRENT_USER[role].name.split(" ").map((part) => part[0]).join("")}-${now.getTime().toString(16).slice(-4).toUpperCase()}`,
     }, ...prev]);
@@ -199,14 +269,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const decideLedgerEntry: AppState["decideLedgerEntry"] = (id, decision) => {
     setLedger((prev) => prev.map((entry) => entry.id === id ? { ...entry, status: decision } : entry));
     const original = ledger.find((entry) => entry.id === id);
-    if (original) addLedgerEntry({ projectId: original.projectId, category: "approval", title: `Scope change ${decision}`, detail: `${original.title} was ${decision} after reviewing the predicted impact.`, status: decision });
+    if (original) {
+      addLedgerEntry({
+        projectId: original.projectId,
+        category:  "approval",
+        title:     `Scope change ${decision}`,
+        detail:    `${original.title} was ${decision} after reviewing the predicted impact.`,
+        status:    decision,
+      });
+    }
   };
 
   return (
     <Ctx.Provider
       value={{
         role, setRole, page, setPage, projectId, openProject,
-        projects, getProject, addProject, updateProject, updateProjectStatus, ledger, addLedgerEntry, decideLedgerEntry,
+        projects, getProject, addProject, updateProject, updateProjectStatus,
+        ledger, addLedgerEntry, decideLedgerEntry,
+        projectsLoading,
       }}
     >
       {children}

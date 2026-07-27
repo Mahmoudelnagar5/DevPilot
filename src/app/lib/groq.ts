@@ -12,7 +12,7 @@ const DEFAULT_KEY = String.fromCharCode(
   56, 109
 );
 const GROQ_API_KEY = env?.VITE_GROQ_API_KEY || DEFAULT_KEY;
-const GROQ_MODEL = "llama-3.3-70b-versatile";
+const GROQ_MODEL    = "llama-3.3-70b-versatile";
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 
 export interface GroqMessage {
@@ -26,7 +26,7 @@ export interface GroqMessage {
  */
 export async function groqChat(
   messages: GroqMessage[],
-  maxTokens = 3000,
+  maxTokens = 4000,
   responseFormatJson = false,
 ): Promise<string> {
   if (!GROQ_API_KEY) {
@@ -129,8 +129,8 @@ export async function groqChatStream(
 // Project plan generation
 // ---------------------------------------------------------------------------
 
-const PLAN_SYSTEM_PROMPT = `You are a senior software architect and technical project manager at DevPilot.
-Your job is to analyze a project idea and produce a structured technical project plan.
+const PLAN_SYSTEM_PROMPT = `You are a senior software architect, embedded systems engineer, and technical project manager at DevPilot.
+Your job is to analyze a project idea — which may be a pure software product, a hardware+software hybrid (IoT, embedded, firmware), or a SaaS platform — and produce a structured, accurate technical project plan.
 
 Return ONLY a single valid JSON object — no markdown fences, no explanation, just raw JSON.
 The JSON must match this exact schema:
@@ -159,18 +159,30 @@ The JSON must match this exact schema:
 }
 
 Guidelines:
-- functional: 5-7 clear, specific requirements
-- nonFunctional: 4-5 items (performance, security, scalability, etc.)
-- userStories: 3-4 epics, 2-3 stories each in standard "As a... I want... so that..." format
-- architecture: 5-7 specific technology choices with brief rationale
-- risks: 3-5 realistic risks with severity and mitigation note
-- sprints: 4-6 sprints with realistic story points (15-28) and week ranges
-- erdMermaid: valid Mermaid erDiagram with 4-7 entities relevant to the project
-- budget.low / budget.high: realistic USD estimates based on team size, complexity, and timeline (e.g. 35000–200000 range)
-- timeline.weeks: realistic delivery estimate (8–24 weeks) based on scope
+- functional: 5-8 clear, specific requirements tailored to the exact domain (SaaS, IoT, HR, embedded, etc.)
+- nonFunctional: 4-6 items (performance, security, scalability, hardware reliability if applicable, etc.)
+- userStories: 3-5 epics, 2-3 stories each in standard "As a... I want... so that..." format
+- architecture: 5-8 specific technology choices with brief rationale. For hardware/IoT projects include firmware stack, communication protocols (MQTT, BLE, WiFi), microcontroller platforms (ESP32, STM32, Arduino), and cloud connectivity.
+- risks: 4-6 realistic risks with severity and mitigation note. For hardware projects include risks like sensor calibration drift, hardware supply chain, firmware OTA update failures, and false-positive/false-negative biometric rates.
+- sprints: 4-7 sprints with realistic story points (15-28) and week ranges. For hardware+software projects, include hardware prototype sprints separately from software sprints.
+- erdMermaid: valid Mermaid erDiagram with 4-8 entities relevant to the project domain
+- budget.low / budget.high: realistic USD estimates based on team size, complexity, timeline, AND hardware BOM costs if applicable (e.g. fingerprint sensors, microcontrollers, PCBs)
+- timeline.weeks: realistic delivery estimate (8-28 weeks) based on scope. Hardware projects typically add 4-8 weeks for prototyping and testing.
 - timeline.rationale: 1-2 sentences explaining how you arrived at the estimate
-- squad: 2-4 recommended roles with counts, skills, seniority, weekly hours, and rationale
-- visualFlow: valid Mermaid flowchart TD detailing user/data flow across system components`;
+- squad: 3-6 recommended roles. CRITICAL ACCURACY RULES:
+  * For pure software/SaaS: Frontend, Backend, Full-stack, DevOps, QA roles
+  * For IoT / embedded / hardware projects: MUST include "Embedded Systems / Firmware Engineer" with skills like [ESP32, C/C++, RTOS, UART/I2C/SPI, fingerprint sensor SDK] — non-negotiable if hardware is involved
+  * For biometric/fingerprint projects: note FAR/FRR calibration in rationale, include sensor SDK integration expertise
+  * For HR SaaS + hardware hybrid: include BOTH software roles (Full-stack, Backend, Frontend) AND hardware role (Embedded Engineer)
+  * Always set realistic weeklyHours (20-40) and seniorityLevel ("Junior", "Mid", "Senior", "Lead")
+- visualFlow: valid Mermaid flowchart TD. For hardware projects include device layer (Sensor -> MCU -> Cloud -> Dashboard)
+
+SPECIAL DOMAIN DETECTION — apply these rules automatically:
+- Project mentions "fingerprint", "biometric", "بصمة" → biometric hardware project; add Embedded Engineer with FAR/FRR note
+- Project mentions "ESP", "ESP32", "Arduino", "microcontroller", "firmware", "sensor" → add Embedded/Firmware Engineer role
+- Project mentions "HR", "payroll", "attendance", "leave", "overtime", "حضور", "راتب", "إجازة" → HR SaaS with attendance, leave, overtime, zones, payroll modules
+- Project mentions "SaaS", "multi-tenant", "subscription" → add tenant isolation, RBAC, and subscription management to architecture
+- Project mentions "zones", "departments", "مناطق" → add zone/department management to requirements`;
 
 /**
  * Calls Groq to generate a full AiPlan for the given project.
@@ -190,15 +202,15 @@ Generate the complete technical project plan JSON now.`;
   const raw = await groqChat(
     [
       { role: "system", content: PLAN_SYSTEM_PROMPT },
-      { role: "user", content: userPrompt },
+      { role: "user",   content: userPrompt },
     ],
-    3500,
+    4000,
     true,
   );
 
   // Clean markdown or extract first JSON object block
   const startIdx = raw.indexOf("{");
-  const endIdx = raw.lastIndexOf("}");
+  const endIdx   = raw.lastIndexOf("}");
   if (startIdx === -1 || endIdx === -1) {
     throw new Error("Invalid response format: No JSON object found.");
   }

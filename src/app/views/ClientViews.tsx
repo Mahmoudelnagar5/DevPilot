@@ -9,6 +9,7 @@ import {
   Panel, StatCard, ScoreRing, ProgressBar, StatusPill, Mono, money, AiTag, SectionTitle,
 } from "../components/shared";
 import { ProjectPlan } from "../components/ProjectPlan";
+import { BookTQAMeetingDialog } from "../components/BookTQAMeetingDialog";
 import { TrustLayer } from "../components/TrustLayer";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
@@ -42,6 +43,7 @@ export function ClientViews() {
 }
 
 function ClientDashboard() {
+  const { t } = useLanguage();
   const { openProject, projects } = useApp();
   const avgHealth = projects.length ? Math.round(projects.reduce((s, p) => s + p.health, 0) / projects.length) : 0;
   const committed = projects.reduce((s, p) => s + p.budgetHigh, 0);
@@ -51,19 +53,19 @@ function ClientDashboard() {
   return (
     <div className="p-4 sm:p-6">
       <PageHeader
-        title="Welcome back, Nadia"
-        subtitle="Your portfolio at a glance — AI-monitored, human-approved."
+        title={t("client.welcome")}
+        subtitle={t("client.welcomeSub")}
         action={<NewProjectDialog />}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Active Projects" value={projects.length} sub={`${inExecution} in execution · ${awaiting} awaiting approval`} icon={<Activity className="size-4" />} />
-        <StatCard label="Avg Health" value={avgHealth} accent="success" sub="Composite AI score" icon={<TrendingUp className="size-4" />} />
-        <StatCard label="Committed Budget" value={money(committed)} sub={`${money(spent)} spent`} icon={<Wallet className="size-4" />} />
+        <StatCard label="Avg Health" value={avgHealth} accent="success" sub={t("client.compositeAiScore")} icon={<TrendingUp className="size-4" />} />
+        <StatCard label="Committed Budget" value={money(committed)} sub={`${money(spent)} ${t("plan.spent")}`} icon={<Wallet className="size-4" />} />
         <StatCard label="Next Milestone" value="Aug 1" accent="warning" sub="Bank Reconciliation" />
       </div>
 
-      <SectionTitle hint="click a card to open">Projects</SectionTitle>
+      <SectionTitle hint={t("client.clickCardToOpen")}>Projects</SectionTitle>
       <div className="grid gap-4 lg:grid-cols-2">
         {projects.map((proj) => (
           <ProjectCard key={proj.id} project={proj} onOpen={() => openProject(proj.id)} />
@@ -74,6 +76,7 @@ function ClientDashboard() {
 }
 
 function ProjectCard({ project: p, onOpen }: { project: Project; onOpen: () => void }) {
+  const { t } = useLanguage();
   return (
     <button onClick={onOpen} className="group text-left">
       <Panel className="overflow-hidden transition-colors group-hover:border-primary/40">
@@ -89,20 +92,20 @@ function ProjectCard({ project: p, onOpen }: { project: Project; onOpen: () => v
           </div>
         </div>
         <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
-          <ScoreRing score={p.health} label="health" />
+          <ScoreRing score={p.health} label={t("client.healthLabel")} />
           <div className="flex-1 space-y-3">
             <div>
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Progress</span><Mono>{p.progress}%</Mono>
+                <span>{t("common.progress")}</span><Mono>{p.progress}%</Mono>
               </div>
               <ProgressBar value={p.progress} className="mt-1" />
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Budget</span>
+              <span className="text-muted-foreground">{t("common.budget")}</span>
               <Mono>{money(p.budgetLow)}–{money(p.budgetHigh)}</Mono>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Risk</span>
+              <span className="text-muted-foreground">{t("common.risk")}</span>
               <span className="flex items-center gap-2">
                 <Mono className={p.riskScore > 50 ? "text-destructive" : p.riskScore > 30 ? "text-warning" : "text-success"}>{p.riskScore}/100</Mono>
               </span>
@@ -129,14 +132,11 @@ function NewProjectDialog() {
     const trimmedName = name.trim();
     const trimmedDesc = idea.trim();
 
-    // Build the id the same way AppContext does so we can navigate immediately
-    const id = "p-" + trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Date.now().toString().slice(-4);
-
-    addProject({ name: trimmedName, description: trimmedDesc });
+    const createdProject = addProject({ name: trimmedName, description: trimmedDesc });
     setOpen(false);
     reset();
     toast(t("client.generating"), { icon: "⚡" });
-    openProject(id);
+    openProject(createdProject.id);
   };
 
   return (
@@ -154,7 +154,7 @@ function NewProjectDialog() {
         <div className="space-y-4">
           <div>
             <label className="mb-1.5 block text-sm font-medium">{t("client.projectName")}</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. TaskFlow SaaS" />
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("client.projectNamePlaceholder")} />
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium">{t("client.description")}</label>
@@ -177,31 +177,35 @@ function NewProjectDialog() {
 }
 
 function ClientProject() {
-  const { projectId, getProject, updateProjectStatus } = useApp();
-  const p = getProject(projectId);
+  const { t } = useLanguage();
+  const { projectId, getProject, projects, updateProjectStatus } = useApp();
+  const p = getProject(projectId) || projects[0];
   const awaitingClient = p?.status === "client-approval";
   const inReviewByTM = p?.status === "tm-review";
   return (
     <div className="p-4 sm:p-6">
       <PageHeader
-        title="Project Plan"
-        subtitle="AI-generated plan — review before approving. Every figure is an estimate."
+        title={t("client.projectPlan")}
+        subtitle={t("client.projectPlanSub")}
         action={
           p && (
-            awaitingClient ? (
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button variant="outline" onClick={() => { updateProjectStatus(p.id, "tm-review"); toast("Sent back to your Technical Manager with comments."); }}>
-                  <X className="size-4" /> Request changes
-                </Button>
-                <Button onClick={() => { updateProjectStatus(p.id, "in-progress"); toast.success("Plan approved — the team is starting execution! 🎉"); }}>
-                  <Check className="size-4" /> Approve & start project
-                </Button>
-              </div>
-            ) : inReviewByTM ? (
-              <span className="rounded-md border border-warning/25 bg-warning/10 px-3 py-1.5 text-sm text-warning">
-                Awaiting Technical Manager review
-              </span>
-            ) : null
+            <div className="flex flex-wrap items-center gap-2">
+              <BookTQAMeetingDialog projectName={p.name} />
+              {awaitingClient ? (
+                <>
+                  <Button variant="outline" onClick={() => { updateProjectStatus(p.id, "tm-review"); toast("Sent back to your Technical Manager with comments."); }}>
+                    <X className="size-4" /> {t("client.requestChanges")}
+                  </Button>
+                  <Button onClick={() => { updateProjectStatus(p.id, "in-progress"); toast.success("Plan approved — the team is starting execution! 🎉"); }}>
+                    <Check className="size-4" /> {t("client.approveStart")}
+                  </Button>
+                </>
+              ) : inReviewByTM ? (
+                <span className="rounded-md border border-warning/25 bg-warning/10 px-3 py-1.5 text-sm text-warning">
+                  {t("client.awaitingTMReview")}
+                </span>
+              ) : null}
+            </div>
           )
         }
       />
@@ -211,13 +215,14 @@ function ClientProject() {
 }
 
 function ClientMilestones() {
-  const { projectId, getProject, addLedgerEntry } = useApp();
-  const p = getProject(projectId);
+  const { t } = useLanguage();
+  const { projectId, getProject, projects, addLedgerEntry } = useApp();
+  const p = getProject(projectId) || projects[0];
   const [decided, setDecided] = useState<Record<string, "approved" | "rejected">>({});
-  if (!p) return <div className="p-6 text-muted-foreground">Select a project first.</div>;
+  if (!p) return <div className="p-6 text-muted-foreground">{t("common.selectProjectFirst")}</div>;
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="Milestones & Approvals" subtitle={`${p.name} — approve deliverables to release payment.`} />
+      <PageHeader title={t("client.milestonesTitle")} subtitle={`${p.name} — approve deliverables to release payment.`} />
       <div className="space-y-4">
         {p.milestones.map((m) => {
           const decision = decided[m.id];
@@ -231,12 +236,12 @@ function ClientMilestones() {
                     <StatusPill status={decision ?? m.status} />
                   </div>
                   <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>Due {new Date(m.due).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                    <span>{t("common.due")} {new Date(m.due).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
                     <Mono>{money(m.amount)}</Mono>
                   </div>
                   <div className="mt-3 max-w-md">
                     <ProgressBar value={m.progress} />
-                    <div className="mt-1 text-xs text-muted-foreground font-mono">{m.progress}% complete</div>
+                    <div className="mt-1 text-xs text-muted-foreground font-mono">{m.progress}% {t("client.complete")}</div>
                   </div>
                 </div>
                 {canAct && !decision && (
@@ -260,8 +265,8 @@ function ClientMilestones() {
 
 function ClientInvoices() {
   const { t } = useLanguage();
-  const { projectId, getProject } = useApp();
-  const p = getProject(projectId);
+  const { projectId, getProject, projects } = useApp();
+  const p = getProject(projectId) || projects[0];
   if (!p) return <div className="p-6 text-muted-foreground">Select a project first.</div>;
   const total = p.invoices.reduce((s, i) => s + i.amount, 0);
   const paid = p.invoices.filter((i) => i.status === "paid").reduce((s, i) => s + i.amount, 0);
@@ -281,8 +286,8 @@ function ClientInvoices() {
               <TableHead>{t("client.milestone")}</TableHead>
               <TableHead>{t("client.issued")}</TableHead>
               <TableHead>{t("client.amount")}</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead>{t("common.status")}</TableHead>
+              <TableHead className="text-right">{t("common.action")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -339,7 +344,7 @@ export function MessagesView() {
           })}
         </div>
         <div className="flex items-center gap-2 border-t border-border p-3">
-          <Input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Message the team…" />
+          <Input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder={t("client.messagePlaceholder")} />
           <Button onClick={send}><Send className="size-4" /></Button>
         </div>
       </Panel>
@@ -349,8 +354,8 @@ export function MessagesView() {
 
 export function TeamView() {
   const { t } = useLanguage();
-  const { projectId, getProject } = useApp();
-  const p = getProject(projectId);
+  const { projectId, getProject, projects } = useApp();
+  const p = getProject(projectId) || projects[0];
   if (!p) return <div className="p-6 text-muted-foreground">Select a project first.</div>;
   return (
     <div className="p-4 sm:p-6">
@@ -376,7 +381,7 @@ export function TeamView() {
               )}
               {m.availability != null && (
                 <div className="mt-3">
-                  <div className="flex justify-between text-xs text-muted-foreground"><span>Availability</span><Mono>{m.availability}%</Mono></div>
+                  <div className="flex justify-between text-xs text-muted-foreground"><span>{t("common.availability")}</span><Mono>{m.availability}%</Mono></div>
                   <ProgressBar value={m.availability} className="mt-1" />
                 </div>
               )}

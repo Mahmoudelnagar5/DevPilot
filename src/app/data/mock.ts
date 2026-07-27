@@ -512,10 +512,16 @@ export const plans = [
     checks: [], cta: "Start Free", active: 210, highlight: false,
   },
   {
+    name: "Request Credit", price: "$29", priceNote: " / credit (1 project)", tagline: "Pay per project credit. No monthly subscription.",
+    features: ["1 Project Credit = 1 Full Workspace", "No Monthly Fees", "AI Planning & Architecture", "Impact Simulator", "Human TM Oversight", "Decision Ledger & Trust Layer", "Code & Security Review", "Lifetime Project Validity"],
+    checks: ["1 Credit unlocks all features for 1 full project.", "Bulk discount: 3 credits for $69, 5 credits for $99.", "No monthly subscription. Credits never expire."],
+    note: "Best for founders, freelancers, and agencies launching projects on demand.", cta: "Request Your Credit", active: 142, highlight: true,
+  },
+  {
     name: "Professional", price: 49, tagline: "Your AI Technical Project Manager",
     features: ["Unlimited Projects", "AI Planning", "Impact Simulator", "Stand-up Coach", "Advanced Code Review", "Security Review", "Priority Processing", "Client Portal", "Export Docs", "Email Support", "Human Oversight"],
     checks: ["Technical Manager validates critical decisions when risk is high."],
-    note: "", cta: "Start Building", active: 96, highlight: true,
+    note: "", cta: "Start Building", active: 96, highlight: false,
   },
   {
     name: "Team", price: 199, tagline: "AI + Human Expertise",

@@ -4,6 +4,8 @@ import { cn } from "./ui/utils";
 import { type Project } from "../data/mock";
 import { useApp } from "../AppContext";
 import { groqChatStream, type GroqMessage } from "../lib/groq";
+import { useLanguage } from "../LanguageContext";
+import { MermaidRenderer } from "./MermaidRenderer";
 
 interface ChatMsg {
   role: "user" | "ai";
@@ -12,11 +14,70 @@ interface ChatMsg {
   streaming?: boolean;
 }
 
+/** Parse message text to detect and extract mermaid code blocks */
+function parseMermaidBlocks(text: string): Array<{ type: "text" | "mermaid"; content: string }> {
+  const blocks: Array<{ type: "text" | "mermaid"; content: string }> = [];
+  const mermaidRegex = /```mermaid\s*\n([\s\S]*?)```/g;
+  
+  let lastIndex = 0;
+  let match;
+  
+  console.log("🔍 Parsing text for Mermaid blocks:", text.substring(0, 100) + "...");
+  
+  while ((match = mermaidRegex.exec(text)) !== null) {
+    console.log("✨ Found Mermaid block!");
+    
+    // Add text before the mermaid block
+    if (match.index > lastIndex) {
+      const textContent = text.slice(lastIndex, match.index).trim();
+      if (textContent) {
+        blocks.push({ type: "text", content: textContent });
+      }
+    }
+    
+    // Add the mermaid block
+    blocks.push({ type: "mermaid", content: match[1].trim() });
+    lastIndex = match.index + match[0].length;
+  }
+  
+  // Add remaining text after the last mermaid block
+  if (lastIndex < text.length) {
+    const textContent = text.slice(lastIndex).trim();
+    if (textContent) {
+      blocks.push({ type: "text", content: textContent });
+    }
+  }
+  
+  // If no mermaid blocks found, return the whole text
+  if (blocks.length === 0) {
+    console.log("❌ No Mermaid blocks found");
+    blocks.push({ type: "text", content: text });
+  } else {
+    console.log(`✅ Found ${blocks.filter(b => b.type === "mermaid").length} Mermaid block(s)`);
+  }
+  
+  return blocks;
+}
+
 /** Build a detailed system prompt from live project data */
 function buildSystemPrompt(project: Project | undefined): string {
   if (!project) {
     return `You are DevPilot AI, an expert technical project management assistant.
-Answer questions concisely and helpfully. If no project is selected, let the user know.`;
+Answer questions concisely and helpfully. If no project is selected, let the user know.
+
+IMPORTANT: When asked to create or analyze database schemas, ERD diagrams, or data models:
+- Generate them using Mermaid erDiagram syntax
+- Wrap the diagram in a mermaid code block like this:
+\`\`\`mermaid
+erDiagram
+    ENTITY1 ||--o{ ENTITY2 : relationship
+    ENTITY1 {
+        type field_name
+    }
+\`\`\`
+- The diagram will be automatically rendered as a visual ERD (not just text)
+- Include proper cardinality notation: ||--o{ (one-to-many), }|--|| (many-to-one), ||--|| (one-to-one), }o--o{ (many-to-many)
+- Define entity fields with data types when creating database schemas`;
   }
 
   const spentPct = Math.round((project.spent / project.budgetHigh) * 100);
@@ -68,18 +129,34 @@ ${tasksText || "  (none yet)"}
 - Always ground your answers in the data above; never make up numbers.
 - If asked for advice beyond the data, give best-practice guidance and note it is advisory.
 - Use a friendly, professional tone.
-- Do NOT output markdown headers or bullet-point heavy responses unless explicitly asked for a list.`;
+- Do NOT output markdown headers or bullet-point heavy responses unless explicitly asked for a list.
+
+IMPORTANT - MERMAID DIAGRAMS:
+When asked to create or analyze database schemas, ERD diagrams, or data models:
+- Generate them using Mermaid erDiagram syntax
+- Wrap the diagram in a mermaid code block:
+\`\`\`mermaid
+erDiagram
+    ENTITY1 ||--o{ ENTITY2 : relationship
+    ENTITY1 {
+        type field_name
+    }
+\`\`\`
+- The diagram will be automatically rendered as a visual ERD (not just text)
+- Include proper cardinality notation: ||--o{ (one-to-many), }|--|| (many-to-one), ||--|| (one-to-one), }o--o{ (many-to-many)
+- Define entity fields with data types when creating database schemas`;
 }
 
-const SUGGESTIONS = [
-  "How is the project going?",
-  "What's the cost estimate?",
-  "Any risks I should know about?",
-  "When will the project finish?",
-];
-
 export function AiAssistant() {
+  const { t } = useLanguage();
   const { projectId, getProject } = useApp();
+
+  const SUGGESTIONS = [
+    t("ai.suggested.4"),
+    t("ai.suggested.5"),
+    t("ai.suggested.6"),
+    t("ai.suggested.7"),
+  ];
   const project = getProject(projectId);
 
   const [open, setOpen] = useState(false);
@@ -88,7 +165,7 @@ export function AiAssistant() {
   const [msgs, setMsgs] = useState<ChatMsg[]>([
     {
       role: "ai",
-      text: "Hi! I'm your DevPilot AI assistant powered by Llama 3.3. Ask me anything about your project's status, cost, timeline, or risks — I read live project data.",
+      text: t("ai.greeting"),
     },
   ]);
 
@@ -173,7 +250,7 @@ export function AiAssistant() {
           className="fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-105 sm:bottom-6 sm:right-6"
         >
           <Sparkles className="size-5" />
-          <span className="font-medium text-sm">Ask AI</span>
+          <span className="font-medium text-sm">{t("ai.ask")}</span>
         </button>
       )}
 
@@ -186,9 +263,9 @@ export function AiAssistant() {
                 <Sparkles className="size-4" />
               </div>
               <div className="leading-tight">
-                <div className="text-sm font-medium">AI Assistant</div>
+                <div className="text-sm font-medium">{t("ai.assistant")}</div>
                 <div className="text-[10px] text-muted-foreground font-mono">
-                  Llama 3.3 · live project data
+                  {t("ai.liveData")}
                 </div>
               </div>
             </div>
@@ -215,7 +292,21 @@ export function AiAssistant() {
                       : "bg-muted text-foreground",
                   )}
                 >
-                  {m.text}
+                  {m.role === "ai" ? (
+                    <>
+                      {parseMermaidBlocks(m.text).map((block, blockIdx) => (
+                        <div key={blockIdx}>
+                          {block.type === "text" ? (
+                            <div className="whitespace-pre-wrap">{block.content}</div>
+                          ) : (
+                            <MermaidRenderer chart={block.content} />
+                          )}
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    <div className="whitespace-pre-wrap">{m.text}</div>
+                  )}
                   {m.streaming && m.text === "" && (
                     <span className="flex items-center gap-1 text-muted-foreground">
                       <span className="inline-block size-1.5 rounded-full bg-current animate-bounce [animation-delay:0ms]" />
@@ -260,7 +351,7 @@ export function AiAssistant() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about status, cost, risk…"
+              placeholder={t("ai.placeholder2")}
               disabled={loading}
               className="flex-1 rounded-md border border-border bg-input-background px-3 py-2 text-sm outline-none focus:border-primary/50 disabled:opacity-60"
             />

@@ -3,10 +3,11 @@ import {
   LayoutDashboard, FolderKanban, CheckSquare, Receipt, MessageSquare, Users,
   Bell, Search, KanbanSquare, Clock, GitPullRequest, UserCircle, ListChecks,
   BarChart3, ShieldCheck, CreditCard, LifeBuoy, Layers, ChevronDown, Sparkles,
-  Menu, X, ScrollText, Presentation, Globe,
+  Menu, X, ScrollText, Presentation, Globe, LogOut,
 } from "lucide-react";
 import { cn } from "./ui/utils";
 import { useApp, DEFAULT_PAGE } from "../AppContext";
+import { useAuth } from "../AuthContext";
 import { useLanguage } from "../LanguageContext";
 import { CURRENT_USER, notifications, type Role } from "../data/mock";
 import {
@@ -59,10 +60,27 @@ const NAV: Record<Role, NavItem[]> = {
 
 export function Shell({ children }: { children: ReactNode }) {
   const { role, setRole, page, setPage } = useApp();
+  const { profile, user: authUser, signOut } = useAuth();
   const { lang, toggleLang, t } = useLanguage();
   const [notifOpen, setNotifOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const user = CURRENT_USER[role];
+  const mockUser = CURRENT_USER[role];
+
+  // Prefer real authenticated profile/metadata, fallback to email or mock
+  const realName = profile?.full_name || (authUser?.user_metadata?.full_name as string) || authUser?.email?.split("@")[0];
+  const currentRole = (profile?.role || authUser?.user_metadata?.role || role) as Role;
+  const roleTitleMap: Record<Role, string> = {
+    client: "Client",
+    developer: "Developer",
+    tm: "Technical Manager",
+    admin: "Platform Admin",
+  };
+
+  const user = {
+    name: realName || mockUser.name,
+    title: roleTitleMap[currentRole] || mockUser.title,
+    avatar: profile?.avatar_url ?? (authUser ? `https://i.pravatar.cc/120?u=${authUser.id}` : mockUser.avatar),
+  };
   const nav = NAV[role];
   const unread = notifications.filter((n) => n.unread).length;
   const isRTL = lang === "ar";
@@ -102,7 +120,7 @@ export function Shell({ children }: { children: ReactNode }) {
           </div>
           <div className="leading-tight">
             <div className="font-display font-bold tracking-tight">{t("app.title")}</div>
-            <div className="text-[10px] text-muted-foreground font-mono">AI Technical PM</div>
+            <div className="text-[10px] text-muted-foreground font-mono">{t("shell.aiTitle")}</div>
           </div>
           <button
             aria-label="Close navigation"
@@ -137,12 +155,10 @@ export function Shell({ children }: { children: ReactNode }) {
         <div className="p-3 border-t border-border">
           <div className="rounded-md bg-muted/50 p-3">
             <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
-              <Sparkles className="size-3.5" /> Llama 3.3 · Groq
+              <Sparkles className="size-3.5" /> {t("llama.groq")}
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              {isRTL
-                ? "الذكاء الاصطناعي يقترح · والخبراء يعتمدون. جميع التقديرات استشارية."
-                : "AI proposes · humans approve. All estimates are advisory."}
+              {t("shell.aiSub")}
             </p>
           </div>
         </div>
@@ -187,7 +203,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <DropdownMenuTrigger asChild>
               <button className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-card px-2 py-2 text-sm hover:border-primary/40 sm:px-3">
                 <span className="hidden text-muted-foreground text-xs font-mono sm:inline">
-                  {isRTL ? "عرض كـ" : "VIEW AS"}
+                  {t("shell.viewAs")}
                 </span>
                 <span className="max-w-[7rem] truncate font-medium sm:max-w-none">{t(`role.${role}`)}</span>
                 <ChevronDown className="size-4 text-muted-foreground" />
@@ -237,7 +253,7 @@ export function Shell({ children }: { children: ReactNode }) {
             </PopoverContent>
           </Popover>
 
-          {/* User */}
+          {/* User + Sign Out */}
           <div className="flex items-center gap-2 pl-0 sm:pl-2 border-l border-border ml-0 sm:ml-1 pl-0 sm:pl-3">
             <Avatar className="size-9">
               <AvatarImage src={user.avatar} alt={user.name} />
@@ -247,6 +263,13 @@ export function Shell({ children }: { children: ReactNode }) {
               <div className="text-sm font-medium">{user.name}</div>
               <div className="text-[11px] text-muted-foreground">{user.title}</div>
             </div>
+            <button
+              onClick={() => signOut()}
+              title="Sign out"
+              className="grid size-9 place-items-center rounded-md border border-border text-muted-foreground hover:border-destructive/50 hover:text-destructive transition-colors ml-1"
+            >
+              <LogOut className="size-4" />
+            </button>
           </div>
         </header>
 

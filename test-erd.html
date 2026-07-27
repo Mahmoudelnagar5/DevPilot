@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ERD Rendering</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'dark'
+        });
+    </script>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            font-family: system-ui;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Test: ERD Rendering with Mermaid</h1>
+        
+        <h2>Example 1: Employee Management System</h2>
+        <pre class="mermaid">
+erDiagram
+    Employee ||--o{ Attendance : logs
+    Employee ||--o{ LeaveRequest : requests
+    Employee ||--o{ OvertimeRequest : requests
+    Manager ||--o{ Employee : manages
+    Role ||--o{ Employee : assigns
+
+    Employee {
+        int id PK
+        string name
+        string email
+        int manager_id FK
+        int role_id FK
+    }
+
+    Attendance {
+        int id PK
+        int employee_id FK
+        date date
+        time check_in
+        time check_out
+    }
+
+    LeaveRequest {
+        int id PK
+        int employee_id FK
+        date start_date
+        date end_date
+        string status
+    }
+
+    OvertimeRequest {
+        int id PK
+        int employee_id FK
+        date date
+        float hours
+        string status
+    }
+
+    Manager {
+        int id PK
+        string name
+        string department
+    }
+
+    Role {
+        int id PK
+        string role_name
+        string permissions
+    }
+        </pre>
+
+        <h2>Example 2: Blog System</h2>
+        <pre class="mermaid">
+erDiagram
+    User ||--o{ Post : writes
+    User ||--o{ Comment : makes
+    Post ||--o{ Comment : has
+
+    User {
+        int id PK
+        string username
+        string email
+        datetime created_at
+    }
+
+    Post {
+        int id PK
+        int author_id FK
+        string title
+        text content
+        datetime published_at
+    }
+
+    Comment {
+        int id PK
+        int user_id FK
+        int post_id FK
+        text content
+        datetime created_at
+    }
+        </pre>
+    </div>
+</body>
+</html>

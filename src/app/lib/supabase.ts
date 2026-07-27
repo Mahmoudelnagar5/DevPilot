@@ -1,0 +1,20 @@
+/// <reference types="vite/client" />
+import { createClient } from "@supabase/supabase-js";
+
+const env = (import.meta as unknown as { env: Record<string, string> }).env || {};
+const supabaseUrl = (env.VITE_SUPABASE_URL || "") as string;
+const supabaseAnonKey = (env.VITE_SUPABASE_ANON_KEY || "") as string;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Missing Supabase environment variables. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env");
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+});
+
+export type { User, Session } from "@supabase/supabase-js";

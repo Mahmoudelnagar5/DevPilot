@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../AppContext";
+import { useLanguage } from "../LanguageContext";
 import {
   platformStats, mrrTrend, aiUsageByFeature, platformUsers, plans,
   supportTickets, personById, type PlatformUser,
@@ -57,19 +58,20 @@ function ChartTooltip({ active, payload, label }: any) {
 }
 
 function Analytics() {
+  const { t } = useLanguage();
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="Platform Analytics" subtitle="DevPilot Ops — live platform health" />
+      <PageHeader title={t("admin.pageTitle")} subtitle={t("admin.pageSub")} />
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Active Projects" value={platformStats.activeProjects} icon={<Sparkles className="size-4" />} />
-        <StatCard label="MRR" value={money(platformStats.mrr)} accent="success" sub="+5.5% MoM" icon={<DollarSign className="size-4" />} />
-        <StatCard label="Churn" value={`${platformStats.churn}%`} accent="warning" sub="−0.1pt MoM" icon={<TrendingDown className="size-4" />} />
-        <StatCard label="AI Spend" value={money(platformStats.aiCost)} sub={`${platformStats.aiCalls.toLocaleString()} calls`} icon={<Sparkles className="size-4" />} />
+        <StatCard label={t("admin.activeProjects")} value={platformStats.activeProjects} icon={<Sparkles className="size-4" />} />
+        <StatCard label={t("admin.mrr")} value={money(platformStats.mrr)} accent="success" sub="+5.5% MoM" icon={<DollarSign className="size-4" />} />
+        <StatCard label={t("admin.churn")} value={`${platformStats.churn}%`} accent="warning" sub="−0.1pt MoM" icon={<TrendingDown className="size-4" />} />
+        <StatCard label={t("admin.aiSpend")} value={money(platformStats.aiCost)} sub={`${platformStats.aiCalls.toLocaleString()} ${t("pipeline.timeline").toLowerCase()}`} icon={<Sparkles className="size-4" />} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel className="p-5 lg:col-span-2">
-          <SectionTitle hint="last 7 months">MRR Growth</SectionTitle>
+          <SectionTitle hint="last 7 months">{t("admin.mrrGrowth")}</SectionTitle>
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={mrrTrend} margin={{ left: -10, right: 8 }}>
               <CartesianGrid stroke={chartTheme.grid} vertical={false} />
@@ -82,7 +84,7 @@ function Analytics() {
         </Panel>
 
         <Panel className="p-5">
-          <SectionTitle hint="churn %">Churn Trend</SectionTitle>
+          <SectionTitle hint="churn %">{t("admin.churnTrend")}</SectionTitle>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={mrrTrend} margin={{ left: -20, right: 8 }}>
               <CartesianGrid stroke={chartTheme.grid} vertical={false} />
@@ -95,7 +97,7 @@ function Analytics() {
         </Panel>
 
         <Panel className="p-5 lg:col-span-2">
-          <SectionTitle hint="calls this month">AI Usage by Feature</SectionTitle>
+          <SectionTitle hint="calls this month">{t("admin.aiUsageByFeature")}</SectionTitle>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={aiUsageByFeature} margin={{ left: -10, right: 8 }}>
               <CartesianGrid stroke={chartTheme.grid} vertical={false} />
@@ -108,12 +110,12 @@ function Analytics() {
         </Panel>
 
         <Panel className="p-5">
-          <SectionTitle>User Base</SectionTitle>
+          <SectionTitle>{t("admin.userBase")}</SectionTitle>
           <div className="space-y-4">
             {[
-              { label: "Developers", val: platformStats.users.developers, total: 1600, color: "var(--chart-1)" },
-              { label: "Clients", val: platformStats.users.clients, total: 1600, color: "var(--chart-2)" },
-              { label: "Technical Managers", val: platformStats.users.tms, total: 1600, color: "var(--chart-3)" },
+              { label: t("admin.developers"), val: platformStats.users.developers, total: 1600, color: "var(--chart-1)" },
+              { label: t("admin.clients"), val: platformStats.users.clients, total: 1600, color: "var(--chart-2)" },
+              { label: t("admin.technicalManagers"), val: platformStats.users.tms, total: 1600, color: "var(--chart-3)" },
             ].map((u) => (
               <div key={u.label}>
                 <div className="flex justify-between text-sm"><span>{u.label}</span><Mono>{u.val.toLocaleString()}</Mono></div>
@@ -130,6 +132,7 @@ function Analytics() {
 }
 
 function UsersAdmin() {
+  const { t } = useLanguage();
   const [users, setUsers] = useState(platformUsers);
   const [q, setQ] = useState("");
   const filtered = users.filter((u) => u.name.toLowerCase().includes(q.toLowerCase()) || u.email.includes(q.toLowerCase()));
@@ -139,17 +142,17 @@ function UsersAdmin() {
   };
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="User Management" subtitle={`${users.length} users — verify, suspend, edit roles`} />
+      <PageHeader title={t("admin.userManagement")} subtitle={`${users.length} users — ${t("admin.verify").toLowerCase()}, ${t("admin.suspend").toLowerCase()}, edit roles`} />
       <div className="relative mb-4 max-w-sm">
         <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search users…" className="pl-9" />
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("admin.searchUsers")} className="pl-9" />
       </div>
       <Panel className="overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Role</TableHead>
-              <TableHead>Projects</TableHead><TableHead>Joined</TableHead><TableHead>Status</TableHead><TableHead></TableHead>
+              <TableHead>{t("common.name")}</TableHead><TableHead>{t("common.email")}</TableHead><TableHead>{t("common.role")}</TableHead>
+              <TableHead>{t("common.projects")}</TableHead><TableHead>{t("common.joined")}</TableHead><TableHead>{t("common.status")}</TableHead><TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -165,11 +168,11 @@ function UsersAdmin() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="size-4" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {u.status === "pending" && <DropdownMenuItem onClick={() => setStatus(u.id, "active")}><Check className="size-4" /> Verify</DropdownMenuItem>}
+                      {u.status === "pending" && <DropdownMenuItem onClick={() => setStatus(u.id, "active")}><Check className="size-4" /> {t("admin.verify")}</DropdownMenuItem>}
                       {u.status !== "suspended" ? (
-                        <DropdownMenuItem onClick={() => setStatus(u.id, "suspended")}><Ban className="size-4" /> Suspend</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setStatus(u.id, "suspended")}><Ban className="size-4" /> {t("admin.suspend")}</DropdownMenuItem>
                       ) : (
-                        <DropdownMenuItem onClick={() => setStatus(u.id, "active")}><Check className="size-4" /> Reinstate</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setStatus(u.id, "active")}><Check className="size-4" /> {t("admin.reinstate")}</DropdownMenuItem>
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -184,16 +187,17 @@ function UsersAdmin() {
 }
 
 function ProjectsAdmin() {
+  const { t } = useLanguage();
   const { projects } = useApp();
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="Project Oversight" subtitle="All projects across the platform" />
+      <PageHeader title={t("admin.projectOversight")} subtitle={t("admin.projectOversightSub")} />
       <Panel className="overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Project</TableHead><TableHead>Client</TableHead><TableHead>Stage</TableHead>
-              <TableHead>Health</TableHead><TableHead>Budget</TableHead><TableHead>Risk</TableHead>
+              <TableHead>{t("common.name")}</TableHead><TableHead>{t("common.client")}</TableHead><TableHead>{t("common.stage")}</TableHead>
+              <TableHead>{t("common.health")}</TableHead><TableHead>{t("common.budget")}</TableHead><TableHead>{t("common.risk")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -215,55 +219,64 @@ function ProjectsAdmin() {
 }
 
 function PlansAdmin() {
+  const { t } = useLanguage();
   const priceText = (p: (typeof plans)[number]) => {
     if (typeof p.price === "string") return p.price;
     if (p.price === 0) return "Free";
     return money(p.price);
   };
-  const priceSuffix = (p: (typeof plans)[number]) => (typeof p.price === "string" ? "" : "/mo");
+  const priceSuffix = (p: (typeof plans)[number]) => {
+    if (p.priceNote) return p.priceNote;
+    if (typeof p.price === "string") return "";
+    return "/mo";
+  };
 
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="Subscription Plans" subtitle="Tiers, limits, and active subscribers" />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <PageHeader title={t("admin.subscriptionPlans")} subtitle={t("admin.subscriptionPlansSub")} />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {plans.map((p) => (
-          <Panel key={p.name} className={cn("p-5", p.highlight && "border-primary/40")}>
-            <div className="flex items-center justify-between">
-              <h3 className="font-display text-lg font-semibold">{p.name}</h3>
-              {p.highlight && <StatusPill status="active" />}
-            </div>
-            <p className="text-sm text-muted-foreground">{p.tagline}</p>
-            <div className="mt-2 font-display text-2xl font-semibold">{priceText(p)}<span className="text-sm text-muted-foreground font-sans">{priceSuffix(p)}</span></div>
-            <div className="mt-4 flex flex-wrap gap-1.5">
-              {p.features.map((f) => (
-                <span key={f} className="inline-block rounded-md border border-border bg-muted/50 px-2 py-0.5 text-[11px] text-muted-foreground">
-                  {f}
-                </span>
-              ))}
-            </div>
-            {p.note && (
-              <div className="mt-3 border-t border-border pt-3">
-                <p className="flex items-start gap-1.5 text-[11px] text-primary">
-                  <Check className="mt-0.5 size-3 shrink-0" />
-                  <span>{p.note}</span>
-                </p>
+          <Panel key={p.name} className={cn("p-5 flex flex-col justify-between", p.highlight && "border-primary/40 bg-primary/[0.02]")}>
+            <div>
+              <div className="flex items-center justify-between">
+                <h3 className="font-display text-lg font-semibold">{p.name}</h3>
+                {p.highlight && <StatusPill status="active" />}
               </div>
-            )}
-            {p.checks.length > 0 && (
-              <div className="mt-3 space-y-1 border-t border-border pt-3">
-                {p.checks.map((c) => (
-                  <p key={c} className="flex items-start gap-1.5 text-[11px] text-primary">
-                    <Check className="mt-0.5 size-3 shrink-0" />
-                    <span>{c}</span>
-                  </p>
+              <p className="text-sm text-muted-foreground">{p.tagline}</p>
+              <div className="mt-2 font-display text-2xl font-semibold">{priceText(p)}<span className="text-xs text-muted-foreground font-sans font-normal">{priceSuffix(p)}</span></div>
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {p.features.map((f) => (
+                  <span key={f} className="inline-block rounded-md border border-border bg-muted/50 px-2 py-0.5 text-[11px] text-muted-foreground">
+                    {f}
+                  </span>
                 ))}
               </div>
-            )}
-            <div className="mt-3 border-t border-border pt-3 text-sm">
-              <span className="text-muted-foreground">Active subscribers</span>
-              <div className="font-display text-xl font-semibold text-primary">{p.active}</div>
+              {p.note && (
+                <div className="mt-3 border-t border-border pt-3">
+                  <p className="flex items-start gap-1.5 text-[11px] text-primary">
+                    <Check className="mt-0.5 size-3 shrink-0" />
+                    <span>{p.note}</span>
+                  </p>
+                </div>
+              )}
+              {p.checks.length > 0 && (
+                <div className="mt-3 space-y-1 border-t border-border pt-3">
+                  {p.checks.map((c) => (
+                    <p key={c} className="flex items-start gap-1.5 text-[11px] text-primary">
+                      <Check className="mt-0.5 size-3 shrink-0" />
+                      <span>{c}</span>
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
-            <Button variant={p.highlight ? "default" : "outline"} className="mt-4 w-full" onClick={() => toast("Plan editor opened")}>{p.cta}</Button>
+            <div>
+              <div className="mt-4 border-t border-border pt-3 text-sm">
+                <span className="text-muted-foreground">{t("admin.activeSubscribers")}</span>
+                <div className="font-display text-xl font-semibold text-primary">{p.active}</div>
+              </div>
+              <Button variant={p.highlight ? "default" : "outline"} className="mt-4 w-full" onClick={() => toast("Plan editor opened")}>{p.cta}</Button>
+            </div>
           </Panel>
         ))}
       </div>
@@ -272,15 +285,16 @@ function PlansAdmin() {
 }
 
 function Support() {
+  const { t } = useLanguage();
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="Support Queue" subtitle="Tickets across the platform" />
+      <PageHeader title={t("admin.supportQueue")} subtitle={t("admin.supportQueueSub")} />
       <Panel className="overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead><TableHead>Subject</TableHead><TableHead>User</TableHead>
-              <TableHead>Priority</TableHead><TableHead>Age</TableHead><TableHead>Status</TableHead>
+              <TableHead>{t("common.id")}</TableHead><TableHead>{t("common.subject")}</TableHead><TableHead>{t("common.name")}</TableHead>
+              <TableHead>{t("common.priority")}</TableHead><TableHead>{t("common.age")}</TableHead><TableHead>{t("common.status")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -302,12 +316,13 @@ function Support() {
 }
 
 function PlatformSettings() {
+  const { t } = useLanguage();
   const [flags, setFlags] = useState({ aiCodeReview: true, autoRisk: true, meetingSummaries: false, i18n: true });
   return (
     <div className="max-w-2xl p-4 sm:p-6">
-      <PageHeader title="Platform Settings" subtitle="Feature flags, AI provider config, rate limits" />
+      <PageHeader title={t("admin.platformSettings")} subtitle={t("admin.platformSettingsSub")} />
       <Panel className="p-5 mb-4">
-        <SectionTitle>Feature Flags</SectionTitle>
+        <SectionTitle>{t("admin.featureFlags")}</SectionTitle>
         <div className="space-y-3">
           {Object.entries({ aiCodeReview: "AI Code Review", autoRisk: "Automatic Risk Recalculation", meetingSummaries: "Meeting Summaries (beta)", i18n: "Internationalization" }).map(([k, label]) => (
             <div key={k} className="flex items-center justify-between gap-4">
@@ -323,21 +338,21 @@ function PlatformSettings() {
         </div>
       </Panel>
       <Panel className="p-5">
-        <SectionTitle>AI Provider</SectionTitle>
+        <SectionTitle>{t("admin.aiProvider")}</SectionTitle>
         <div className="space-y-3 text-sm">
-          <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-muted-foreground">Provider</span><Mono>Google Gemini</Mono></div>
-          <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-muted-foreground">Model</span><Mono>gemini-2.5-pro</Mono></div>
+          <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-muted-foreground">{t("admin.provider")}</span><Mono>Google Gemini</Mono></div>
+          <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-muted-foreground">{t("admin.model")}</span><Mono>gemini-2.5-pro</Mono></div>
           <div>
-            <label className="mb-1.5 block text-muted-foreground">API Key</label>
+            <label className="mb-1.5 block text-muted-foreground">{t("admin.apiKey")}</label>
             <Input type="password" defaultValue="YOUR_API_KEY_HERE" className="font-mono" />
             <p className="mt-1 text-xs text-muted-foreground">Replace with your real Gemini API credentials.</p>
           </div>
           <div>
-            <label className="mb-1.5 block text-muted-foreground">Rate limit (req/min)</label>
+            <label className="mb-1.5 block text-muted-foreground">{t("admin.rateLimit")}</label>
             <Input defaultValue="600" className="font-mono max-w-[120px]" />
           </div>
         </div>
-        <Button className="mt-4" onClick={() => toast.success("Settings saved")}>Save</Button>
+        <Button className="mt-4" onClick={() => toast.success("Settings saved")}>{t("admin.save")}</Button>
       </Panel>
     </div>
   );

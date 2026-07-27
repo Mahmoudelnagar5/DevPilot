@@ -5,6 +5,7 @@ import { projectById, personById, people, codeReview } from "../data/mock";
 import { PageHeader } from "../components/Shell";
 import { Panel, StatCard, ScoreRing, ProgressBar, StatusPill, Mono, money, AiTag, SectionTitle } from "../components/shared";
 import { ProjectPlan } from "../components/ProjectPlan";
+import { BookTQAMeetingDialog } from "../components/BookTQAMeetingDialog";
 import { TrustLayer } from "../components/TrustLayer";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
@@ -84,8 +85,9 @@ function TMOverview() {
 }
 
 function PlanReview() {
+  const { t } = useLanguage();
   const { projectId, getProject, updateProjectStatus, projects, openProject } = useApp();
-  const p = getProject(projectId);
+  const p = getProject(projectId) || projects[0] || projectById("p-ledgerloop");
 
   // If the currently-open project isn't awaiting review, surface the queue.
   const queue = projects.filter((x) => x.status === "tm-review");
@@ -93,7 +95,7 @@ function PlanReview() {
   if (!p) {
     return (
       <div className="p-6">
-        <PageHeader title="AI Plan Review" subtitle="No project selected." />
+        <PageHeader title={t("nav.aiPlanReview")} subtitle={t("tm.noProjectSelected")} />
       </div>
     );
   }
@@ -104,16 +106,17 @@ function PlanReview() {
   return (
     <div className="p-4 sm:p-6">
       <PageHeader
-        title="AI Plan Review"
-        subtitle="Review and edit the AI's draft before the client sees it. You have final say."
+        title={t("nav.aiPlanReview")}
+        subtitle={t("tm.aiPlanReviewSubtitle")}
         action={
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button variant="outline" onClick={() => toast("Sent back to AI with your notes")}>Regenerate section</Button>
+            <BookTQAMeetingDialog projectName={p.name} />
+            <Button variant="outline" onClick={() => toast("Sent back to AI with your notes")}>{t("tm.regenerateSection")}</Button>
             <Button
               disabled={!isPending}
               onClick={() => { updateProjectStatus(p.id, "client-approval"); toast.success(`${p.name} approved — released to client for approval`); }}
             >
-              <Check className="size-4" /> {alreadyReleased ? "Released to client" : "Approve & release to client"}
+              <Check className="size-4" /> {alreadyReleased ? t("tm.releasedToClient") : t("tm.approveRelease")}
             </Button>
           </div>
         }
@@ -121,7 +124,7 @@ function PlanReview() {
 
       {queue.length > 0 && (
         <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-warning/25 bg-warning/10 p-3 text-sm">
-          <span className="text-warning font-medium">{queue.length} awaiting review:</span>
+          <span className="text-warning font-medium">{queue.length} {t("tm.awaitingReview")}</span>
           {queue.map((q) => (
             <button
               key={q.id}
@@ -134,16 +137,26 @@ function PlanReview() {
         </div>
       )}
 
-      <ProjectPlan projectId={projectId} editable />
+      <ProjectPlan projectId={p.id} editable />
     </div>
   );
 }
 
 function Assignments() {
   const { t } = useLanguage();
-  const { addLedgerEntry } = useApp();
-  // Rank developers for the currently-open backlog task by simple skill match.
-  const task = projectById("p-ledgerloop")!.tasks.find((t) => t.status === "todo")!;
+  const { projectId, getProject, projects, addLedgerEntry } = useApp();
+  const p = getProject(projectId) || projects[0] || projectById("p-ledgerloop");
+  const task = p?.tasks?.find((t) => t.status === "todo") || p?.tasks?.[0] || {
+    id: "t-default",
+    key: "TASK-1",
+    title: "Initial setup & API configuration",
+    epic: "Setup",
+    status: "todo",
+    assignee: "u-youssef",
+    points: 3,
+    hoursLogged: 0,
+    estimate: 8,
+  };
   const required = ["Python", "Gemini API"];
   const [assigned, setAssigned] = useState<string | null>(null);
   const devs = people.filter((p) => p.role === "developer");
@@ -164,7 +177,7 @@ function Assignments() {
           <span>{task.title}</span>
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          Required skills:
+          {t("tm.requiredSkills")}
           {required.map((r) => <span key={r} className="rounded bg-muted px-2 py-0.5 font-mono">{r}</span>)}
           <AiTag label="AI ranked" />
         </div>
@@ -186,17 +199,17 @@ function Assignments() {
                 </div>
               </div>
               <div className="text-xs text-muted-foreground sm:text-right">
-                <div><Mono>{matches}</Mono> skill match</div>
-                <div><Mono>{d.availability}%</Mono> free</div>
+                <div><Mono>{matches}</Mono> {t("tm.skillMatch")}</div>
+                <div><Mono>{d.availability}%</Mono> {t("tm.free")}</div>
               </div>
               <div className="w-full sm:w-28 sm:text-right">
-                <div className="text-xs text-muted-foreground">match</div>
+                <div className="text-xs text-muted-foreground">{t("tm.match")}</div>
                 <div className="font-display text-lg font-semibold text-primary">{Math.round(score)}</div>
               </div>
               <Button
                 variant={assigned === d.id ? "default" : "outline"}
                 size="sm"
-                onClick={() => { setAssigned(d.id); addLedgerEntry({ projectId: "p-ledgerloop", category: "approval", title: `${d.name} assigned to ${task.key}`, detail: `Technical Manager confirmed the developer assignment after reviewing AI rank ${i + 1} and match score ${Math.round(score)}.`, status: "approved" }); toast.success(`${d.name} assigned to ${task.key}`); }}
+                onClick={() => { setAssigned(d.id); addLedgerEntry({ projectId: p?.id || "p-ledgerloop", category: "approval", title: `${d.name} assigned to ${task.key}`, detail: `Technical Manager confirmed the developer assignment after reviewing AI rank ${i + 1} and match score ${Math.round(score)}.`, status: "approved" }); toast.success(`${d.name} assigned to ${task.key}`); }}
               >
                 {assigned === d.id ? <><Check className="size-4" /> Assigned</> : "Assign"}
               </Button>
@@ -213,15 +226,15 @@ function PRReviews() {
   const [decision, setDecision] = useState<"accepted" | "overridden" | null>(null);
   return (
     <div className="p-4 sm:p-6">
-      <PageHeader title="PR Review" subtitle={t("tm.prReviewSubtitle")} />
+      <PageHeader title={t("tm.prReview")} subtitle={t("tm.prReviewSubtitle")} />
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel className="p-5">
           <div className="mb-3 flex flex-wrap items-center gap-2"><GitPullRequest className="size-5 text-primary" /><h3>{codeReview.pr}</h3></div>
-          <p className="text-sm text-muted-foreground">Author: Youssef Amrani · +214 −38 · 6 files</p>
-          <SectionTitle hint="advisory">AI Review</SectionTitle>
+          <p className="text-sm text-muted-foreground">{t("tm.author")}</p>
+          <SectionTitle hint="advisory">{t("tm.aiReview")}</SectionTitle>
           <div className="mb-3 flex flex-wrap gap-6">
-            <div><span className="text-muted-foreground text-xs font-mono">QUALITY </span><Mono className="text-success">{codeReview.qualityScore}</Mono></div>
-            <div><span className="text-muted-foreground text-xs font-mono">SECURITY </span><Mono className="text-destructive">{codeReview.securityFlags} flag</Mono></div>
+            <div><span className="text-muted-foreground text-xs font-mono">{t("tm.quality")} </span><Mono className="text-success">{codeReview.qualityScore}</Mono></div>
+            <div><span className="text-muted-foreground text-xs font-mono">{t("tm.security")} </span><Mono className="text-destructive">{codeReview.securityFlags} flag</Mono></div>
           </div>
           <div className="space-y-2">
             {codeReview.comments.map((c, i) => (
@@ -237,23 +250,23 @@ function PRReviews() {
         </Panel>
 
         <Panel className="p-5">
-          <h3 className="mb-3">Your Decision</h3>
+          <h3 className="mb-3">{t("tm.yourDecision")}</h3>
           <div className="rounded-md border border-warning/25 bg-warning/10 p-3 text-sm mb-4">
             <Sparkles className="mb-1 size-4 text-warning" />
             AI recommends <strong>request changes</strong> — 1 unresolved security flag (access_token logged).
           </div>
-          <Textarea rows={4} placeholder="Reasoning (logged for auditability — every override is recorded)…" className="mb-3" />
+          <Textarea rows={4} placeholder={t("tm.reasonPlaceholder")} className="mb-3" />
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button variant="outline" onClick={() => { setDecision("overridden"); toast("Override recorded — merged with reasoning"); }}>
-              Override & approve
+              {t("tm.overrideApprove")}
             </Button>
             <Button onClick={() => { setDecision("accepted"); toast.success("Accepted AI recommendation — changes requested"); }}>
-              <Check className="size-4" /> Accept & request changes
+              <Check className="size-4" /> {t("tm.acceptRequest")}
             </Button>
           </div>
           {decision && (
             <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-              <Check className="size-4 text-success" /> Decision logged: <Mono>{decision}</Mono>
+              <Check className="size-4 text-success" /> {t("tm.decisionLogged")} <Mono>{decision}</Mono>
             </div>
           )}
         </Panel>
@@ -264,12 +277,14 @@ function PRReviews() {
 
 function Reports() {
   const { t } = useLanguage();
-  const p = projectById("p-ledgerloop")!;
+  const { projectId, getProject, projects } = useApp();
+  const p = getProject(projectId) || projects[0] || projectById("p-ledgerloop");
+  if (!p) return <div className="p-6 text-muted-foreground">Select a project first.</div>;
   return (
     <div className="p-4 sm:p-6">
       <PageHeader
         title={t("tm.statusReports")}
-        subtitle="AI-drafted, exportable reports for clients & stakeholders"
+        subtitle={t("tm.statusReportsSub")}
         action={<Button onClick={() => toast.success("Report exported to PDF")}><FileDown className="size-4" /> {t("tm.exportPdf")}</Button>}
       />
       <Panel className="max-w-3xl p-4 sm:p-6">
@@ -281,7 +296,7 @@ function Reports() {
         <div className="mt-4 flex flex-col gap-6 sm:flex-row sm:items-center">
           <ScoreRing score={p.health} label="health" />
           <div className="space-y-1 text-sm">
-            <div>Progress: <Mono>{p.progress}%</Mono> ({p.milestones.filter((m) => m.status === "approved" || m.status === "paid").length}/{p.milestones.length} milestones)</div>
+            <div>Progress: <Mono>{p.progress}%</Mono> ({p.milestones?.filter((m) => m.status === "approved" || m.status === "paid").length ?? 0}/{p.milestones?.length ?? 0} milestones)</div>
             <div>Risk: <Mono className="text-warning">{p.riskScore}/100</Mono> — Plaid scope, backend capacity</div>
             <div>Predicted delivery: <Mono>{new Date(p.predictedEnd).toLocaleDateString("en-US", { month: "long", day: "numeric" })}</Mono></div>
           </div>
