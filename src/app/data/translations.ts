@@ -475,7 +475,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "auth.noAccount": "Don't have an account?",
     "auth.haveAccount": "Already have an account?",
     "auth.terms": "By continuing, you agree to DevPilot's Terms of Service and Privacy Policy.",
-    
+
     // Auth Page - Left Panel
     "auth.aiPoweredDelivery": "AI-Powered Project Delivery",
     "auth.poweredByGroq": "Powered by Groq · Llama 3.3",
@@ -954,7 +954,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "auth.noAccount": "ليس لديك حساب؟",
     "auth.haveAccount": "لديك حساب بالفعل؟",
     "auth.terms": "بمتابعتك، فإنك توافق على شروط الخدمة وسياسة الخصوصية الخاصة بـ DevPilot.",
-    
+
     // Auth Page - Left Panel
     "auth.aiPoweredDelivery": "تسليم المشاريع بالذكاء الاصطناعي",
     "auth.poweredByGroq": "مدعوم بـ Groq · Llama 3.3",

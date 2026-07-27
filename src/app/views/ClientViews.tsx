@@ -53,11 +53,11 @@ function ClientDashboard() {
   const spent = projects.reduce((s, p) => s + p.spent, 0);
   const inExecution = projects.filter((p) => p.status === "in-progress").length;
   const awaiting = projects.filter((p) => p.status === "tm-review" || p.status === "client-approval").length;
-  
+
   // Get user name from profile or auth metadata
   const userName = profile?.full_name || (authUser?.user_metadata?.full_name as string) || authUser?.email?.split("@")[0] || "User";
   const greeting = `${t("client.welcome")}, ${userName}`;
-  
+
   return (
     <div className="p-4 sm:p-6">
       <PageHeader
@@ -145,9 +145,9 @@ function NewProjectDialog() {
     conversationSummary?: string;
   } | null>(null);
 
-  const reset = () => { 
-    setName(""); 
-    setIdea(""); 
+  const reset = () => {
+    setName("");
+    setIdea("");
     setStep("initial");
     setChatMessages([]);
     setChatInput("");
@@ -166,7 +166,7 @@ function NewProjectDialog() {
 
   const sendMessage = async () => {
     if (!chatInput.trim() || loading) return;
-    
+
     const userMessage = chatInput.trim();
     setChatInput("");
     setChatMessages(prev => [...prev, { role: "user", text: userMessage }]);
@@ -178,7 +178,7 @@ function NewProjectDialog() {
         role: m.role === "user" ? "user" : "assistant" as const,
         content: m.text
       }));
-      
+
       // Add system context
       const systemPrompt = `أنت مساعد ذكي متخصص في تحليل وتوضيح أفكار المشاريع التقنية.
       
@@ -222,12 +222,12 @@ function NewProjectDialog() {
       if (aiResponse.includes("✅ REFINEMENT_COMPLETE") || aiResponse.includes("REFINEMENT_COMPLETE")) {
         // Build full conversation context for extraction
         const fullConversation = [...chatMessages, { role: "user", text: userMessage }, { role: "ai", text: aiResponse }];
-        
+
         // Extract platform info from conversation
         const conversationText = fullConversation.map(m => m.text.toLowerCase()).join(" ");
         let platform = "To be determined";
         let techStack = "To be determined";
-        
+
         // Detect platform
         if (conversationText.includes("موبايل") || conversationText.includes("mobile") || conversationText.includes("ios") || conversationText.includes("android")) {
           platform = "Mobile (iOS/Android)";
@@ -239,18 +239,18 @@ function NewProjectDialog() {
           platform = "Desktop Application";
           techStack = "Electron + React";
         }
-        
+
         // Detect hardware/IoT
         if (conversationText.includes("esp") || conversationText.includes("بصمة") || conversationText.includes("fingerprint") || conversationText.includes("sensor")) {
           techStack = `${techStack} + ESP32/Arduino (Fingerprint Sensor) + MQTT/BLE`;
         }
-        
+
         // Build enhanced description with conversation summary
         const conversationSummary = fullConversation
           .filter(m => m.role === "user")
           .map((m, i) => `Q${i + 1}: ${m.text}`)
           .join("\n");
-        
+
         setRefinedData({
           name: name.trim(),
           description: idea.trim(),
@@ -287,7 +287,7 @@ function NewProjectDialog() {
 
   const generateProject = () => {
     if (!refinedData) return;
-    
+
     // Build enhanced description with conversation insights
     const enhancedDescription = `${refinedData.description}
 
@@ -298,8 +298,8 @@ Tech Stack: ${refinedData.techStack}
 === Conversation Insights ===
 ${refinedData.conversationSummary || 'No additional details'}`;
 
-    const createdProject = addProject({ 
-      name: refinedData.name, 
+    const createdProject = addProject({
+      name: refinedData.name,
       description: enhancedDescription
     });
     setOpen(false);
@@ -351,11 +351,10 @@ ${refinedData.conversationSummary || 'No additional details'}`;
               <div className="flex-1 overflow-y-auto space-y-3 pr-2">
                 {chatMessages.map((msg, idx) => (
                   <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[85%] rounded-lg px-4 py-2.5 text-sm ${
-                      msg.role === "user" 
-                        ? "bg-primary text-primary-foreground" 
+                    <div className={`max-w-[85%] rounded-lg px-4 py-2.5 text-sm ${msg.role === "user"
+                        ? "bg-primary text-primary-foreground"
                         : "bg-muted text-foreground"
-                    }`}>
+                      }`}>
                       <div className="whitespace-pre-wrap leading-relaxed">{msg.text.replace("✅ REFINEMENT_COMPLETE", "").trim()}</div>
                     </div>
                   </div>
@@ -373,7 +372,7 @@ ${refinedData.conversationSummary || 'No additional details'}`;
                 )}
               </div>
               <div className="flex gap-2 pt-2 border-t">
-                <Input 
+                <Input
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
@@ -395,12 +394,12 @@ ${refinedData.conversationSummary || 'No additional details'}`;
                   <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">اسم المشروع</span>
                   <p className="text-lg font-semibold">{refinedData.name}</p>
                 </div>
-                
+
                 <div className="space-y-1">
                   <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">الوصف</span>
                   <p className="text-sm leading-relaxed">{refinedData.description}</p>
                 </div>
-                
+
                 <div className="grid gap-4 sm:grid-cols-2 pt-2">
                   <div className="space-y-1.5">
                     <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">

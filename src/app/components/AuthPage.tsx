@@ -63,7 +63,7 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  
+
   // Platform stats
   const [stats, setStats] = useState<PlatformStats>({
     totalProjects: 2,
@@ -79,10 +79,10 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
       const platformStats = await getPlatformStats();
       setStats(platformStats);
     };
-    
+
     // Increment visitor count
     incrementVisitorCount();
-    
+
     // Load stats
     loadStats();
   }, []);
@@ -254,11 +254,10 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
                 key={m}
                 type="button"
                 onClick={() => switchMode(m)}
-                className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all duration-200 ${
-                  mode === m
+                className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all duration-200 ${mode === m
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 {m === "signin" ? t("auth.signIn") : t("auth.signUp")}
               </button>
@@ -400,11 +399,10 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
                       key={r.value}
                       type="button"
                       onClick={() => setSelectedRole(r.value)}
-                      className={`relative flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition-all duration-200 ${
-                        selectedRole === r.value
+                      className={`relative flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition-all duration-200 ${selectedRole === r.value
                           ? "border-primary/60 bg-primary/5 shadow-sm shadow-primary/20"
                           : "border-border bg-muted/20 hover:border-border/80 hover:bg-muted/40"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-base">{r.icon}</span>
